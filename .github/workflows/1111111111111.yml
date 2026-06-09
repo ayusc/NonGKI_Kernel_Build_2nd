@@ -12,10 +12,10 @@ env:
   DEVICE_NAME : "google_pixel_4a"
   DEVICE_CODENAME : "sunfish"
 
-  # Updated cross-compile targets to point to the AOSP GCC fallback for vDSO
-  CUSTOM_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android- CROSS_COMPILE_ARM32=arm-linux-androideabi- CROSS_COMPILE_COMPAT=arm-linux-androideabi-"
+  # Updated to precisely match the system GNU binutils installed by GCC_GNU=true
+  CUSTOM_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
   
-  # Added KCFLAGS to bypass the fatal cgroup variable size warning
+  # Keeps the KCFLAGS bypass to protect against Clang 14+ strictness errors
   EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ KCFLAGS=-Wno-gnu-variable-sized-type-not-at-end"
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
@@ -25,12 +25,12 @@ env:
   CLANG_SOURCE : "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman"
   CLANG_BRANCH : ""
 
-  # Restored Google's official Prebuilt GCCs to act as fallbacks for the 32-bit assembler
-  GCC_GNU : false
-  GCC_64_SOURCE : "https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9.git"
-  GCC_64_BRANCH : "android12L-release"
-  GCC_32_SOURCE : "https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9.git"
-  GCC_32_BRANCH : "android12L-release"
+  # CRITICAL: Set to true! This installs the binutils and assembler that Clang needs to avoid the -EL error
+  GCC_GNU : true
+  GCC_64_SOURCE : ""
+  GCC_64_BRANCH : ""
+  GCC_32_SOURCE : ""
+  GCC_32_BRANCH : ""
 
   DEFCONFIG_SOURCE: ""
   DEFCONFIG_NAME : "sunfish_defconfig"
