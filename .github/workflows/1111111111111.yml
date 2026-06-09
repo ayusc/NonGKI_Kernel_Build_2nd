@@ -96,7 +96,6 @@ jobs:
   build-kernel:
     name: Google Pixel 4a (Stock A13 + ReSukiSU)
     runs-on: ubuntu-latest
-    # This forces GitHub to load a clean Ubuntu 20.04 environment inside the modern runner
     container:
       image: ubuntu:20.04
     env:
@@ -105,13 +104,6 @@ jobs:
       CCACHE_HARDLINK: "true"
 
     steps:
-      # Required inside containers to prevent root ownership permission check blocks
-      - name: 🛠️ Configure Git Safe Directory
-        run: |
-          git config --global --add safe.directory /__w/NonGKI_Kernel_Build_2nd/NonGKI_Kernel_Build_2nd
-          git config --global --add safe.directory /__w/NonGKI_Kernel_Build_2nd/NonGKI_Kernel_Build_2nd/device_kernel
-        shell: bash
-
       - name: ⏰ Checkout repository
         uses: actions/checkout@v6
 
