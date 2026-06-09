@@ -17,9 +17,7 @@ env:
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
   
-  # ==========================================
-  # FIXED: Pointed to the exact QPR3 branch matching your TQ3A OS
-  # ==========================================
+  # Final stable QPR3 branch matching the TQ3A public release
   KERNEL_BRANCH : "android-msm-sunfish-4.14-android13-qpr3"
 
   # Proton Clang (Clang 13)
@@ -50,7 +48,9 @@ env:
   # RAW STOCK BOOT IMAGE LINK
   # ==========================================
   BOOT_SOURCE : "https://github.com/ayusc/NonGKI_Kernel_Build_2nd/releases/download/1234/pixel.4a.boot.img" 
-  PACK_METHOD: "MKBOOTIMG" 
+  
+  # Set to Anykernel3 so the native pack-process script generates the flashable zip
+  PACK_METHOD: "Anykernel3" 
   
   NEED_DTBO : false
   NEED_SAFE_DTBO : false
@@ -73,7 +73,6 @@ env:
   BASEBAND_GUARD_ENABLE: "false" 
   BASEBAND_GUARD_BOOT: "false" 
 
-  # Native DTBs are appended directly into Image.lz4-dtb
   GENERATE_DTB: "false" 
   GENERATE_CHIP: "qcom" 
 
@@ -102,13 +101,8 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
-          # FIXED: Restored python dependencies so mkdtboimg.py doesn't crash the build phase
           apt-get install -y --no-install-recommends sudo git curl wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 zip
           git config --global --add safe.directory '*'
-
-          echo "[+] Fetching official AOSP mkdtimg tool for Kernel Make..."
-          wget -q https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-18.1/utils/src/mkdtboimg.py -O /usr/local/bin/mkdtimg
-          chmod +x /usr/local/bin/mkdtimg
         shell: bash
 
       - name: ⌛️ Compilation environment preparation
@@ -161,7 +155,25 @@ jobs:
         uses: ./.github/workflows/build-process
 
       # =========================================================================
-      # CUSTOM MAGISKBOOT PACKAGING STEP
+      # KERNEL FORMAT FIX (Applies to both AK3 and MagiskBoot)
+      # =========================================================================
+      - name: 🛠️ Fix Kernel Format
+        run: |
+          cd $GITHUB_WORKSPACE
+          if [ -f "device_kernel/out/arch/arm64/boot/Image.lz4-dtb" ]; then
+            cp device_kernel/out/arch/arm64/boot/Image.lz4-dtb device_kernel/out/arch/arm64/boot/Image.gz-dtb
+            echo "✅ Mapped Image.lz4-dtb to Image.gz-dtb"
+          fi
+        shell: bash
+
+      # =========================================================================
+      # ANYKERNEL3 PACKAGING STEP
+      # =========================================================================
+      - name: 🔩 Pack Process (AnyKernel3)
+        uses: ./.github/workflows/pack-process
+
+      # =========================================================================
+      # MAGISKBOOT PACKAGING STEP
       # =========================================================================
       - name: 📦 Pack Custom Boot Image (MagiskBoot)
         run: |
@@ -170,36 +182,19 @@ jobs:
           wget -q https://raw.githubusercontent.com/Uevo001/magiskboot-linux/main/x86_64/magiskboot -O /usr/local/bin/magiskboot
           chmod +x /usr/local/bin/magiskboot
 
-          # Use the stock boot image perfectly downloaded by the internal build-ready script
-          STOCK_IMG="boot_source_${{ env.DEVICE_NAME }}.img"
-          
-          # Capture the exact byte size of the original stock boot image
-          STOCK_SIZE=$(stat -c%s $STOCK_IMG)
-          echo "[+] Original stock boot image size: $STOCK_SIZE bytes"
+          echo "[+] Downloading Stock Boot Image..."
+          wget -q "${{ env.BOOT_SOURCE }}" -O stock_boot.img
 
           echo "[+] Unpacking Stock Boot Image..."
           mkdir repack
           cd repack
-          magiskboot unpack ../$STOCK_IMG
+          magiskboot unpack ../stock_boot.img
 
           echo "[+] Replacing stock kernel with freshly compiled ReSukiSU kernel..."
-          if [ -f "../device_kernel/out/arch/arm64/boot/Image.lz4-dtb" ]; then
-            cp ../device_kernel/out/arch/arm64/boot/Image.lz4-dtb kernel
-            echo "✅ Successfully swapped in compiled Image.lz4-dtb"
-          elif [ -f "../device_kernel/out/arch/arm64/boot/Image.gz-dtb" ]; then
-            cp ../device_kernel/out/arch/arm64/boot/Image.gz-dtb kernel
-            echo "✅ Successfully swapped in compiled Image.gz-dtb"
-          else
-            cp ../device_kernel/out/arch/arm64/boot/Image kernel
-            echo "✅ Successfully swapped in raw Image"
-          fi
+          cp ../device_kernel/out/arch/arm64/boot/Image.gz-dtb kernel
 
           echo "[+] Repacking Boot Image..."
-          magiskboot repack ../$STOCK_IMG new-boot.img
-
-          echo "[+] Padding new boot image to match EXACT original file size..."
-          truncate -s $STOCK_SIZE new-boot.img
-          mv new-boot.img boot.img
+          magiskboot repack ../stock_boot.img boot.img
 
           echo "[+] Zipping the final boot.img..."
           TIME=$(date +"%Y%m%d%H%M")
@@ -207,16 +202,22 @@ jobs:
           zip -9 ../$ZIP_NAME boot.img
           cd ..
           
-          # Pass the zip name to the next step
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+          echo "MAGISK_ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
         shell: bash
 
       # =========================================================================
-      # CUSTOM UPLOAD STEP 
+      # ARTIFACT UPLOADS
       # =========================================================================
+      - name: 📤 Upload AnyKernel3 ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunfish-ReSukiSU-AnyKernel3
+          path: ${{ env.PACK_NAME }}
+          compression-level: 0 
+
       - name: 📤 Upload Boot Image ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: sunfish-ReSukiSU-boot
-          path: ${{ env.ZIP_NAME }}
-          compression-level: 0 # File is already zipped, no need to double-compress
+          name: sunfish-ReSukiSU-BootImg
+          path: ${{ env.MAGISK_ZIP_NAME }}
+          compression-level: 0
