@@ -156,6 +156,11 @@ jobs:
           sed -i 's/CONFIG_COMPAT_VDSO=y/# CONFIG_COMPAT_VDSO is not set/g' arch/arm64/configs/sunfish_defconfig
           echo "# CONFIG_VDSO32 is not set" >> arch/arm64/configs/sunfish_defconfig
           echo "# CONFIG_COMPAT_VDSO is not set" >> arch/arm64/configs/sunfish_defconfig
+          # Speed up build by disabling LTO (Link Time Optimization)
+          echo "[+] Disabling LTO to speed up linking..."
+          sed -i 's/CONFIG_LTO=y/# CONFIG_LTO is not set/g' arch/arm64/configs/sunfish_defconfig
+          sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/sunfish_defconfig
+          sed -i 's/CONFIG_THINLTO=y/# CONFIG_THINLTO is not set/g' arch/arm64/configs/sunfish_defconfig
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
