@@ -92,7 +92,7 @@ env:
 
 jobs:
   build-kernel:
-    name: Google Pixel 4a (Stock A13 + ReSukiSU)
+    name: Google Pixel 4a (Sunfish)
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
