@@ -47,7 +47,7 @@ env:
   # PACKAGING CHANGES HERE
   # Paste the direct download link to your stock boot.img below
   # ========================================================
-  BOOT_SOURCE : "https://link-to-your-stock-boot.img" 
+  BOOT_SOURCE : "https://github.com/ayusc/NonGKI_Kernel_Build_2nd/releases/download/1234/pixel.4a.boot.img" 
   PACK_METHOD: "MKBOOTIMG" 
   # ========================================================
 
