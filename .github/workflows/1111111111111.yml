@@ -14,7 +14,8 @@ env:
 
   CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
   
-  EXTRA_CMDS : "CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++"
+  # Forcing the kernel to use the stable AOSP DTC downloaded in the setup step
+  EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ DTC=/usr/local/bin/dtc"
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
   KERNEL_BRANCH : "android-msm-sunfish-4.14-android13"
@@ -112,7 +113,13 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
-          apt-get install -y --no-install-recommends sudo git binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
+          # Added wget to fetch the official compiler
+          apt-get install -y --no-install-recommends sudo git wget binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
+          
+          echo "[+] Downloading official AOSP Device Tree Compiler..."
+          wget https://raw.githubusercontent.com/LineageOS/android_prebuilts_misc/lineage-18.1/linux-x86/dtc/dtc -O /usr/local/bin/dtc
+          chmod +x /usr/local/bin/dtc
+          
           git config --global --add safe.directory '*'
         shell: bash
 
