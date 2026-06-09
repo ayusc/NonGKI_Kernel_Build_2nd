@@ -111,6 +111,7 @@ jobs:
       # FIXED: Added 'git' directly into the pre-installation string below
       - name: 🛠️ Setup Container Environment
         run: |
+          export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
           apt-get install sudo git binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi -y
           git config --global --add safe.directory '*'
