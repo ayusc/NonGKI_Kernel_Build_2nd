@@ -114,8 +114,7 @@ jobs:
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
           # Installed device-tree-compiler natively to avoid 404 download links
-          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler
-          
+          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler mkdtimg
           git config --global --add safe.directory '*'
         shell: bash
 
