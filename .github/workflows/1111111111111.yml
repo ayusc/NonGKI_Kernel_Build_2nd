@@ -14,7 +14,6 @@ env:
 
   CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
   
-  # Forcing the kernel to use the stable system DTC downloaded via apt-get
   EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ DTC=/usr/bin/dtc"
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
@@ -113,11 +112,13 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
-          # Installed device-tree-compiler natively to avoid 404 download links
-          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools
-          git clone https://android.googlesource.com/platform/system/tools/mkbootimg
-          cd mkbootimg
-          python3 setup.py install
+          # Added python-is-python3 to properly execute the mkdtimg python script
+          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3
+          
+          echo "[+] Fetching official AOSP mkdtimg tool..."
+          wget https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-18.1/utils/src/mkdtboimg.py -O /usr/bin/mkdtimg
+          chmod +x /usr/bin/mkdtimg
+          
           git config --global --add safe.directory '*'
         shell: bash
 
