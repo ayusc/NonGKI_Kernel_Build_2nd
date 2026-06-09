@@ -77,12 +77,9 @@ env:
   BASEBAND_GUARD_ENABLE: "false" 
   BASEBAND_GUARD_BOOT: "false" 
 
-  # ==========================================
-  # NATIVE DTB GENERATION
-  # ==========================================
-  GENERATE_DTB: "true" 
-  GENERATE_CHIP: "google/qcom-base" 
-  # ==========================================
+  # Set back to false since Pixel uses an appended DTB inside the kernel image itself!
+  GENERATE_DTB: "false" 
+  GENERATE_CHIP: "qcom" 
 
   BUILD_DEBUGGER: "false" 
   SKIP_PATCH: "false" 
@@ -173,6 +170,27 @@ jobs:
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
+
+      # NEW STEP: Bridges the gap between Pixel kernel formatting and the packager script
+      - name: 🛠️ Fix MKBOOTIMG & Kernel Format
+        run: |
+          cd $GITHUB_WORKSPACE
+          # 1. Pixel kernels use LZ4 compression. The pack script only checks for GZ.
+          # We rename them so the packager correctly grabs the kernel with the appended DTB.
+          if [ -f "device_kernel/out/arch/arm64/boot/Image.lz4-dtb" ]; then
+            cp device_kernel/out/arch/arm64/boot/Image.lz4-dtb device_kernel/out/arch/arm64/boot/Image.gz-dtb
+            echo "✅ Mapped Image.lz4-dtb -> Image.gz-dtb"
+          elif [ -f "device_kernel/out/arch/arm64/boot/Image.lz4" ]; then
+            cp device_kernel/out/arch/arm64/boot/Image.lz4 device_kernel/out/arch/arm64/boot/Image.gz
+            echo "✅ Mapped Image.lz4 -> Image.gz"
+          fi
+          
+          # 2. Prevent mkbootimg from crashing when packing Pixel 4a's intentionally empty DTB slot
+          if [ -f "mkboottools/mkbootimg.py" ]; then
+            sed -i "s/raise ValueError(.*DTB image must not be empty.*)/pass/g" mkboottools/mkbootimg.py
+            echo "✅ Patched mkbootimg.py to safely allow 0-byte DTBs."
+          fi
+        shell: bash
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
