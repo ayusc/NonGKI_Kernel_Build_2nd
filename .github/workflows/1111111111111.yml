@@ -12,17 +12,18 @@ env:
   DEVICE_NAME : "google_pixel_4a"
   DEVICE_CODENAME : "sunfish"
 
-  CUSTOM_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu-"
-  EXTRA_CMDS : "LLVM=1 LLVM_IAS=1"
+  # Explicitly defined 64-bit and 32-bit cross-compile targets for the vDSO
+  CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-"
+  # Forced LLVM tool mapping to fix Makefile assembler/binutils warnings
+  EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++"
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
   KERNEL_BRANCH : "android-msm-sunfish-4.14-android13"
 
-  # Using Neutron Clang as seen in the K20 Pro and Note 10 configurations
+  # Using Neutron Clang
   CLANG_SOURCE : "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman"
   CLANG_BRANCH : ""
 
-  # Neutron handles compilation on its own; no separate GCC needed
   GCC_GNU : false
   GCC_64_SOURCE : ""
   GCC_64_BRANCH : ""
@@ -69,7 +70,6 @@ env:
   REKERNEL_ENABLE: "false" 
   DROIDSPACES_ENABLE: "false" 
 
-  # Reverted to syscall to satisfy the patch-no-kprobe action logic
   HOOK_METHOD: "syscall" 
 
   KERNEL_PATCH: "false" 
@@ -123,8 +123,6 @@ jobs:
           cd $GITHUB_WORKSPACE/device_kernel
           
           # ReSukiSU manual hook fail-safe
-          # The syscall patch script misses Pixel 4a's specific fs/exec.c formatting.
-          # We manually inject the required ReSukiSU execveat hook if it is missing.
           if ! grep -q "ksu_handle_execveat" fs/exec.c; then
             echo "[+] Injecting missing ksu_handle_execveat hook into fs/exec.c..."
             sed -i '/static int do_execveat_common/i\#ifdef CONFIG_KSU\nextern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv, void *envp, int *flags);\n#endif\n' fs/exec.c
