@@ -1,4 +1,4 @@
-name: Build Google Pixel 4a (Stock A13 + ReSukiSU)
+name: Build Google Pixel 4a (Stock A13 + ReSukiSU Only)
 
 on:
   workflow_call:
@@ -19,6 +19,7 @@ env:
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
   KERNEL_BRANCH : "android-msm-sunfish-4.14-android13"
 
+  # Hardware-compatible compiler toolchains
   CLANG_SOURCE : "https://github.com/nduykha/kernel_samsung_sm7150/releases/download/clang/llvm.tar.xz"
   CLANG_BRANCH : ""
 
@@ -33,13 +34,13 @@ env:
   DEFCONFIG_ORIGIN_IMAGE: ""
   DEFCONFIG_FROM_BOOT: false
 
-  # KernelSU & ReSukiSU Config
+  # KernelSU & ReSukiSU Integration Setup
   KERNELSU_SOURCE : ""
   KERNELSU_BRANCH : ""
   KERNELSU_AUTO_GET : "true" 
   KERNELSU_AUTO_FORK : "resukisu" 
 
-  # Disabled Features
+  # Strictly Disabled Features
   SUSFS_ENABLE : false
   SUSFS_FIXED : false
   REKERNEL_ENABLE: "false" 
@@ -52,24 +53,25 @@ env:
   BASEBAND_GUARD_BOOT: "false" 
   BUILD_OTHER_CONFIG: "false" 
 
+  # Packaging Method
   AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
   AK3_BRANCH : "master"
 
   BOOT_SOURCE : ""
-  NEED_DTBO : true
-  NEED_SAFE_DTBO : true
+  NEED_DTBO : false
+  NEED_SAFE_DTBO : false
 
   ROM_TEXT : "stock_a13"
 
-  # Other env
+  # Engine configs
   PYTHON_VERSION: "3" 
   PACK_METHOD: "Anykernel3" 
   PACK_KMODULES: "false" 
   KERNELSU_METHOD: "shell" 
-  HOOK_METHOD: "syscall" 
+  HOOK_METHOD: "inline" # Fixed from syscall to inline targeting 4.14 source logic
 
-  PATCHES_SOURCE: "JackA1ltman/NonGKI_Kernel_Patches" 
-  PATCHES_BRANCH: "samsung_kernel" 
+  PATCHES_SOURCE: "" 
+  PATCHES_BRANCH: "" 
   SUSFS_FOLDER_FIXED: "" 
   SUSFS_PATCH_FIXED: "" 
   KPM_PATCH_SOURCE: "" 
@@ -99,37 +101,8 @@ jobs:
       - name: ⚙️ Get neccssary tools
         uses: ./.github/workflows/build-ready
 
-      - name: 🪛 Extra Kernel Options
-        run: |
-          cd $GITHUB_WORKSPACE/device_kernel
-          # Just updating the kernel name so you can verify it flashed successfully
-          sed -i 's/CONFIG_LOCALVERSION=.*/CONFIG_LOCALVERSION="-ReSukiSU-Stock"/g' arch/arm64/configs/sunfish_defconfig
-          echo "[+] Kernel name has been updated to -ReSukiSU-Stock"
-
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
-
-      - name: 🔍 Verify and Create DTBO Image
-        run: |
-          cd $GITHUB_WORKSPACE/device_kernel
-
-          echo "🔍 Searching for .dtbo files..."
-          DTBO_FILES=$(find out/arch/arm64/boot/dts/qcom/ -name "*sunfish*.dtbo" -o -name "*.dtbo" | head -n 10)
-
-          if [ -z "$DTBO_FILES" ]; then
-            echo "❌ No .dtbo files found! Check your build log for dtbs errors."
-            exit 1
-          fi
-
-          echo "📦 Creating dtbo.img..."
-          ./tools/mkdtimg create out/arch/arm64/boot/dtbo.img --page_size=4096 ${DTBO_FILES}
-
-          if [ -f "out/arch/arm64/boot/dtbo.img" ]; then
-            echo "✅ DTBO created successfully at out/arch/arm64/boot/dtbo.img"
-          else
-            echo "❌ DTBO creation failed!"
-            exit 1
-          fi
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
