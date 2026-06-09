@@ -108,12 +108,11 @@ jobs:
       - name: ⏰ Checkout repository
         uses: actions/checkout@v6
 
-      # FIXED: Added 'git' directly into the pre-installation string below
       - name: 🛠️ Setup Container Environment
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
-          apt-get install sudo git binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi -y
+          apt-get install -y --no-install-recommends sudo git binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
           git config --global --add safe.directory '*'
         shell: bash
 
