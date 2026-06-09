@@ -13,11 +13,14 @@ env:
   DEVICE_CODENAME : "sunfish"
 
   CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
-  
   EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ DTC=/usr/bin/dtc"
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
-  KERNEL_BRANCH : "android-msm-sunfish-4.14-android13"
+  
+  # ==========================================
+  # FIXED: Pointed to the exact QPR3 branch matching your TQ3A OS
+  # ==========================================
+  KERNEL_BRANCH : "android-msm-sunfish-4.14-android13-qpr3"
 
   # Proton Clang (Clang 13)
   CLANG_SOURCE : "https://github.com/kdrag0n/proton-clang.git"
@@ -36,61 +39,48 @@ env:
 
   KERNELSU_SOURCE : ""
   KERNELSU_BRANCH : ""
-
   KERNELSU_AUTO_GET : "true"
   KERNELSU_AUTO_FORK : "resukisu" 
-
   SUSFS_ENABLE : false
   SUSFS_FIXED : false
-
   AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
   AK3_BRANCH : "master"
 
-  BOOT_SOURCE : "https://github.com/ayusc/NonGKI_Kernel_Build_2nd/releases/download/1234/pixel.4a.boot.img"
-
+  # ==========================================
+  # RAW STOCK BOOT IMAGE LINK
+  # ==========================================
+  BOOT_SOURCE : "https://github.com/ayusc/NonGKI_Kernel_Build_2nd/releases/download/1234/pixel.4a.boot.img" 
+  PACK_METHOD: "MKBOOTIMG" 
+  
   NEED_DTBO : false
   NEED_SAFE_DTBO : false
-
   ROM_TEXT : "stock_a13"
-
   PYTHON_VERSION: "3" 
-
-  # FIXED: Restored PACK_METHOD so the build-ready script runs correctly!
-  PACK_METHOD: "MKBOOTIMG" 
   PACK_KMODULES: "false" 
-
   KERNELSU_METHOD: "shell" 
-
   PATCHES_SOURCE: "" 
   PATCHES_BRANCH: "" 
-
   SUSFS_FOLDER_FIXED: "" 
   SUSFS_PATCH_FIXED: "" 
-
   REKERNEL_ENABLE: "false" 
   DROIDSPACES_ENABLE: "false" 
-
   HOOK_METHOD: "syscall" 
-
   KERNEL_PATCH: "false" 
-
   KPM_ENABLE: "false" 
   KPM_INLINE: "false" 
   KPM_KPATCH_NEXT: "false" 
   KPM_PATCH_SOURCE: "" 
-
   BASEBAND_GUARD_ENABLE: "false" 
   BASEBAND_GUARD_BOOT: "false" 
 
+  # Native DTBs are appended directly into Image.lz4-dtb
   GENERATE_DTB: "false" 
   GENERATE_CHIP: "qcom" 
 
   BUILD_DEBUGGER: "false" 
   SKIP_PATCH: "false" 
-
   BUILD_OTHER_CONFIG: "false" 
   MERGE_CONFIG_FILES: ""
-
   FREE_MORE_SPACE: "false" 
 
 jobs:
@@ -112,9 +102,13 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
-          # Added curl required for build-ready script, and zip for MagiskBoot packaging
-          apt-get install -y --no-install-recommends sudo git curl wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 zip
+          # FIXED: Restored python dependencies so mkdtboimg.py doesn't crash the build phase
+          apt-get install -y --no-install-recommends sudo git curl wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 zip
           git config --global --add safe.directory '*'
+
+          echo "[+] Fetching official AOSP mkdtimg tool for Kernel Make..."
+          wget -q https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-18.1/utils/src/mkdtboimg.py -O /usr/local/bin/mkdtimg
+          chmod +x /usr/local/bin/mkdtimg
         shell: bash
 
       - name: ⌛️ Compilation environment preparation
@@ -166,6 +160,9 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
+      # =========================================================================
+      # CUSTOM MAGISKBOOT PACKAGING STEP
+      # =========================================================================
       - name: 📦 Pack Custom Boot Image (MagiskBoot)
         run: |
           cd $GITHUB_WORKSPACE
@@ -200,6 +197,7 @@ jobs:
           echo "[+] Repacking Boot Image..."
           magiskboot repack ../$STOCK_IMG new-boot.img
 
+          echo "[+] Padding new boot image to match EXACT original file size..."
           truncate -s $STOCK_SIZE new-boot.img
           mv new-boot.img boot.img
 
@@ -213,6 +211,9 @@ jobs:
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
         shell: bash
 
+      # =========================================================================
+      # CUSTOM UPLOAD STEP 
+      # =========================================================================
       - name: 📤 Upload Boot Image ZIP
         uses: actions/upload-artifact@v4
         with:
