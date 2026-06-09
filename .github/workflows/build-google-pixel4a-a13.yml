@@ -3,6 +3,9 @@ name: Build Google Pixel 4a (Stock A13)
 on:
   workflow_call:
   workflow_dispatch:
+  push:
+    branches:
+      - mainline
 
 env:
   # Device env
@@ -74,11 +77,8 @@ env:
   BASEBAND_GUARD_ENABLE: "false" 
   BASEBAND_GUARD_BOOT: "false" 
 
-  # ==========================================
-  # FIX: Tell the script to compile and inject the DTBs to fix the 0-byte error
-  GENERATE_DTB: "true" 
-  # ==========================================
-  
+  # Set back to false to bypass the script's rigid folder checking
+  GENERATE_DTB: "false" 
   GENERATE_CHIP: "qcom" 
 
   BUILD_DEBUGGER: "false" 
@@ -170,6 +170,20 @@ jobs:
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
+
+      # NEW STEP: Bypass the folder check and manually compile the Google DTBs directly for the packager
+      - name: 📦 Fix Google DTB Packaging
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+          echo "🔍 Manually generating concatenated DTB for Google Pixel..."
+          cat $(find out/arch/arm64/boot/dts/google/ -name "*.dtb") > out/arch/arm64/boot/dtb
+          if [ -s "out/arch/arm64/boot/dtb" ]; then
+            echo "✅ Successfully created DTB file!"
+          else
+            echo "❌ Failed to create DTB file. Make sure DTBs were compiled."
+            exit 1
+          fi
+        shell: bash
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
