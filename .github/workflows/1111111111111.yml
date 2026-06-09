@@ -113,12 +113,15 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
-          # Added wget to fetch the official compiler
-          apt-get install -y --no-install-recommends sudo git wget binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
+          # Added ca-certificates for SSL verification
+          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
           
           echo "[+] Downloading official AOSP Device Tree Compiler..."
           wget https://raw.githubusercontent.com/LineageOS/android_prebuilts_misc/lineage-18.1/linux-x86/dtc/dtc -O /usr/local/bin/dtc
           chmod +x /usr/local/bin/dtc
+          
+          git config --global --add safe.directory '*'
+        shell: bash
           
           git config --global --add safe.directory '*'
         shell: bash
