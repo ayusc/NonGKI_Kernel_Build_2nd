@@ -12,19 +12,19 @@ env:
   DEVICE_NAME : "google_pixel_4a"
   DEVICE_CODENAME : "sunfish"
 
-  CUSTOM_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
+  CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
   
-  # Added CC_COMPAT overrides to intercept and force GCC for any stray 32-bit compilation tasks
-  EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ CC_COMPAT=arm-linux-gnueabi-gcc COMPATCC=arm-linux-gnueabi-gcc"
+  # Removed the strict LLVM=1 flag. Maps CC to Clang but allows Kbuild to use GNU tools for DTC preprocessing
+  EXTRA_CMDS : "CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++"
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
   KERNEL_BRANCH : "android-msm-sunfish-4.14-android13"
 
-  # Using Neutron Clang
-  CLANG_SOURCE : "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman"
-  CLANG_BRANCH : ""
+  # Swapped to Proton Clang (Clang 13) - The absolute gold standard for Kernel 4.14
+  CLANG_SOURCE : "https://github.com/kdrag0n/proton-clang.git"
+  CLANG_BRANCH : "master"
 
-  # Keep true so the Ubuntu build-env installs the necessary arm-linux-gnueabi fallbacks
+  # Keeps host GNU binutils active as a safety net
   GCC_GNU : true
   GCC_64_SOURCE : ""
   GCC_64_BRANCH : ""
@@ -131,11 +131,11 @@ jobs:
             echo "[+] Hook injected successfully."
           fi
 
-          # Fix Clang 14+ strictness error on cgroup-defs.h (Bulletproof method)
+          # Safety Net 1: Block Clang variable-sized array strictness errors
           echo "[+] Patching cgroup-defs.h to ignore variable-sized type errors..."
           sed -i '1i #pragma clang diagnostic ignored "-Wgnu-variable-sized-type-not-at-end"' include/linux/cgroup-defs.h
 
-          # Bypass the 32-bit VDSO assembler crash (-EL error)
+          # Safety Net 2: Disable problematic 32-bit legacy VDSO to prevent assembler crashes
           echo "[+] Disabling problematic 32-bit VDSO..."
           sed -i 's/CONFIG_VDSO32=y/# CONFIG_VDSO32 is not set/g' arch/arm64/configs/sunfish_defconfig
           sed -i 's/CONFIG_COMPAT_VDSO=y/# CONFIG_COMPAT_VDSO is not set/g' arch/arm64/configs/sunfish_defconfig
