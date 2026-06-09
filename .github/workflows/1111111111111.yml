@@ -96,7 +96,7 @@ env:
 jobs:
   build-kernel:
     name: Google Pixel 4a (Stock A13 + ReSukiSU)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
