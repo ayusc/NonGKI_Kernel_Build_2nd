@@ -13,6 +13,7 @@ env:
   DEVICE_CODENAME : "sunfish"
 
   CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
+  
   EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ DTC=/usr/bin/dtc"
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
@@ -42,39 +43,54 @@ env:
   SUSFS_ENABLE : false
   SUSFS_FIXED : false
 
-  # ==========================================
-  # RAW STOCK BOOT IMAGE LINK
-  # ==========================================
-  BOOT_SOURCE : "https://github.com/ayusc/NonGKI_Kernel_Build_2nd/releases/download/1234/pixel.4a.boot.img" 
-  
+  AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
+  AK3_BRANCH : "master"
+
+  BOOT_SOURCE : "https://github.com/ayusc/NonGKI_Kernel_Build_2nd/releases/download/1234/pixel.4a.boot.img"
+
+  NEED_DTBO : false
+  NEED_SAFE_DTBO : false
+
   ROM_TEXT : "stock_a13"
+
   PYTHON_VERSION: "3" 
+
+  # FIXED: Restored PACK_METHOD so the build-ready script runs correctly!
+  PACK_METHOD: "MKBOOTIMG" 
+  PACK_KMODULES: "false" 
+
   KERNELSU_METHOD: "shell" 
 
   PATCHES_SOURCE: "" 
   PATCHES_BRANCH: "" 
+
   SUSFS_FOLDER_FIXED: "" 
   SUSFS_PATCH_FIXED: "" 
 
   REKERNEL_ENABLE: "false" 
   DROIDSPACES_ENABLE: "false" 
+
   HOOK_METHOD: "syscall" 
+
   KERNEL_PATCH: "false" 
+
   KPM_ENABLE: "false" 
   KPM_INLINE: "false" 
   KPM_KPATCH_NEXT: "false" 
   KPM_PATCH_SOURCE: "" 
+
   BASEBAND_GUARD_ENABLE: "false" 
   BASEBAND_GUARD_BOOT: "false" 
 
-  # Native DTBs are appended directly into Image.lz4-dtb
   GENERATE_DTB: "false" 
   GENERATE_CHIP: "qcom" 
 
   BUILD_DEBUGGER: "false" 
   SKIP_PATCH: "false" 
+
   BUILD_OTHER_CONFIG: "false" 
   MERGE_CONFIG_FILES: ""
+
   FREE_MORE_SPACE: "false" 
 
 jobs:
@@ -96,8 +112,8 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
-          # Added zip required for final packaging (unzip removed)
-          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 zip
+          # Added curl required for build-ready script, and zip for MagiskBoot packaging
+          apt-get install -y --no-install-recommends sudo git curl wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 zip
           git config --global --add safe.directory '*'
         shell: bash
 
@@ -150,27 +166,24 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
-      # =========================================================================
-      # CUSTOM MAGISKBOOT PACKAGING STEP (Replaces pack-process action)
-      # =========================================================================
       - name: 📦 Pack Custom Boot Image (MagiskBoot)
         run: |
           cd $GITHUB_WORKSPACE
           echo "[+] Downloading MagiskBoot from Uevo001 repository..."
-          wget https://raw.githubusercontent.com/Uevo001/magiskboot-linux/main/x86_64/magiskboot -O /usr/local/bin/magiskboot
+          wget -q https://raw.githubusercontent.com/Uevo001/magiskboot-linux/main/x86_64/magiskboot -O /usr/local/bin/magiskboot
           chmod +x /usr/local/bin/magiskboot
 
-          echo "[+] Downloading Stock Boot Image..."
-          wget "${{ env.BOOT_SOURCE }}" -O stock_boot.img
+          # Use the stock boot image perfectly downloaded by the internal build-ready script
+          STOCK_IMG="boot_source_${{ env.DEVICE_NAME }}.img"
           
           # Capture the exact byte size of the original stock boot image
-          STOCK_SIZE=$(stat -c%s stock_boot.img)
+          STOCK_SIZE=$(stat -c%s $STOCK_IMG)
           echo "[+] Original stock boot image size: $STOCK_SIZE bytes"
 
           echo "[+] Unpacking Stock Boot Image..."
           mkdir repack
           cd repack
-          magiskboot unpack ../stock_boot.img
+          magiskboot unpack ../$STOCK_IMG
 
           echo "[+] Replacing stock kernel with freshly compiled ReSukiSU kernel..."
           if [ -f "../device_kernel/out/arch/arm64/boot/Image.lz4-dtb" ]; then
@@ -185,9 +198,8 @@ jobs:
           fi
 
           echo "[+] Repacking Boot Image..."
-          magiskboot repack ../stock_boot.img new-boot.img
+          magiskboot repack ../$STOCK_IMG new-boot.img
 
-          echo "[+] Padding new boot image to match EXACT original file size..."
           truncate -s $STOCK_SIZE new-boot.img
           mv new-boot.img boot.img
 
@@ -201,9 +213,6 @@ jobs:
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
         shell: bash
 
-      # =========================================================================
-      # CUSTOM UPLOAD STEP (Replaces upload-files action)
-      # =========================================================================
       - name: 📤 Upload Boot Image ZIP
         uses: actions/upload-artifact@v4
         with:
