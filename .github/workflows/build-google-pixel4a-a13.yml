@@ -43,13 +43,8 @@ env:
   AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
   AK3_BRANCH : "master"
 
-  # ========================================================
-  # PACKAGING CHANGES HERE
-  # Paste the direct download link to your stock boot.img below
-  # ========================================================
   BOOT_SOURCE : "https://github.com/ayusc/NonGKI_Kernel_Build_2nd/releases/download/1234/pixel.4a.boot.img" 
   PACK_METHOD: "MKBOOTIMG" 
-  # ========================================================
 
   NEED_DTBO : false
   NEED_SAFE_DTBO : false
@@ -79,7 +74,11 @@ env:
   BASEBAND_GUARD_ENABLE: "false" 
   BASEBAND_GUARD_BOOT: "false" 
 
-  GENERATE_DTB: "false" 
+  # ==========================================
+  # FIX: Tell the script to compile and inject the DTBs to fix the 0-byte error
+  GENERATE_DTB: "true" 
+  # ==========================================
+  
   GENERATE_CHIP: "qcom" 
 
   BUILD_DEBUGGER: "false" 
@@ -92,7 +91,7 @@ env:
 
 jobs:
   build-kernel:
-    name: Google Pixel 4a (Sunfish)
+    name: Google Pixel 4a (Stock A13 + ReSukiSU)
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
