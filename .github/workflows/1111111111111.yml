@@ -18,7 +18,7 @@ env:
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
   KERNEL_BRANCH : "android-msm-sunfish-4.14-android13"
 
-  # Using Neutron Clang as seen in your K20 Pro and Note 10 configurations
+  # Using Neutron Clang as seen in the K20 Pro and Note 10 configurations
   CLANG_SOURCE : "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman"
   CLANG_BRANCH : ""
 
@@ -53,7 +53,6 @@ env:
 
   ROM_TEXT : "stock_a13"
 
-  # Other env
   PYTHON_VERSION: "3" 
 
   PACK_METHOD: "Anykernel3" 
@@ -70,8 +69,8 @@ env:
   REKERNEL_ENABLE: "false" 
   DROIDSPACES_ENABLE: "false" 
 
-  # Crucial fix for Kernel 4.14 to avoid the manual_hook_check stop error
-  HOOK_METHOD: "inline" 
+  # Reverted to syscall to satisfy the patch-no-kprobe action logic
+  HOOK_METHOD: "syscall" 
 
   KERNEL_PATCH: "false" 
 
@@ -121,9 +120,17 @@ jobs:
 
       - name: 🪛 Extra Kernel Options
         run: |
-          # Only ${{ env.DEVICE_NAME }} use it.
           cd $GITHUB_WORKSPACE/device_kernel
-          # Nothing
+          
+          # ReSukiSU manual hook fail-safe
+          # The syscall patch script misses Pixel 4a's specific fs/exec.c formatting.
+          # We manually inject the required ReSukiSU execveat hook if it is missing.
+          if ! grep -q "ksu_handle_execveat" fs/exec.c; then
+            echo "[+] Injecting missing ksu_handle_execveat hook into fs/exec.c..."
+            sed -i '/static int do_execveat_common/i\#ifdef CONFIG_KSU\nextern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv, void *envp, int *flags);\n#endif\n' fs/exec.c
+            sed -i '/if (IS_ERR(filename))/i\#ifdef CONFIG_KSU\n\tksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);\n#endif\n' fs/exec.c
+            echo "[+] Hook injected successfully."
+          fi
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
