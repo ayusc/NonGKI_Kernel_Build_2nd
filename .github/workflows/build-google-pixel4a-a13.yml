@@ -96,8 +96,8 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
-          # Added zip and unzip required for MagiskBoot extraction and final packaging
-          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 zip unzip
+          # Added zip required for final packaging (unzip removed)
+          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 zip
           git config --global --add safe.directory '*'
         shell: bash
 
@@ -156,10 +156,8 @@ jobs:
       - name: 📦 Pack Custom Boot Image (MagiskBoot)
         run: |
           cd $GITHUB_WORKSPACE
-          echo "[+] Downloading MagiskBoot..."
-          wget https://github.com/topjohnwu/Magisk/releases/download/v27.0/Magisk-v27.0.apk -O magisk.apk
-          unzip -q magisk.apk "lib/x86_64/libmagiskboot.so" -d magisk
-          mv magisk/lib/x86_64/libmagiskboot.so /usr/local/bin/magiskboot
+          echo "[+] Downloading MagiskBoot from Uevo001 repository..."
+          wget https://raw.githubusercontent.com/Uevo001/magiskboot-linux/main/x86_64/magiskboot -O /usr/local/bin/magiskboot
           chmod +x /usr/local/bin/magiskboot
 
           echo "[+] Downloading Stock Boot Image..."
