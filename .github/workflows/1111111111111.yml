@@ -107,6 +107,14 @@ jobs:
       - name: ⏰ Checkout repository
         uses: actions/checkout@v6
 
+      # NEW STEP: Installs sudo and configures Git so the container doesn't crash the internal action scripts
+      - name: 🛠️ Setup Container Environment
+        run: |
+          apt-get update -y
+          apt-get install sudo git -y
+          git config --global --add safe.directory '*'
+        shell: bash
+
       - name: ⌛️ Compilation environment preparation
         uses: ./.github/workflows/build-env
 
