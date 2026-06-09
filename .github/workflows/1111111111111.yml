@@ -14,13 +14,12 @@ env:
 
   CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
   
-  # Removed the strict LLVM=1 flag. Maps CC to Clang but allows Kbuild to use GNU tools for DTC preprocessing
   EXTRA_CMDS : "CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++"
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
   KERNEL_BRANCH : "android-msm-sunfish-4.14-android13"
 
-  # Swapped to Proton Clang (Clang 13) - The absolute gold standard for Kernel 4.14
+  # Proton Clang (Clang 13)
   CLANG_SOURCE : "https://github.com/kdrag0n/proton-clang.git"
   CLANG_BRANCH : "master"
 
@@ -97,7 +96,8 @@ env:
 jobs:
   build-kernel:
     name: Google Pixel 4a (Stock A13 + ReSukiSU)
-    runs-on: ubuntu-latest 
+    # CRITICAL FIX: Downgraded to Ubuntu 20.04 to match Proton Clang and Kernel 4.14 compatibility
+    runs-on: ubuntu-20.04 
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
