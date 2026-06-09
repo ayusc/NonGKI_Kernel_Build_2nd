@@ -102,18 +102,17 @@ jobs:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"
-      # Forces apt-get to never prompt for user input
       DEBIAN_FRONTEND: noninteractive 
 
     steps:
       - name: ⏰ Checkout repository
         uses: actions/checkout@v6
 
+      # FIXED: Added 'git' directly into the pre-installation string below
       - name: 🛠️ Setup Container Environment
         run: |
           apt-get update -y
-          # Pre-install sudo and the GCC cross-compilers here WITH the -y flag to bypass the broken prompt in build-env
-          apt-get install sudo binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi -y
+          apt-get install sudo git binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi -y
           git config --global --add safe.directory '*'
         shell: bash
 
