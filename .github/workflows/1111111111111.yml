@@ -122,9 +122,6 @@ jobs:
           
           git config --global --add safe.directory '*'
         shell: bash
-          
-          git config --global --add safe.directory '*'
-        shell: bash
 
       - name: ⌛️ Compilation environment preparation
         uses: ./.github/workflows/build-env
