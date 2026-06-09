@@ -103,6 +103,20 @@ jobs:
           apt-get update -y
           apt-get install -y --no-install-recommends sudo git curl wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 zip
           git config --global --add safe.directory '*'
+
+          echo "[+] Fetching official AOSP mkdtimg tool using Google Git API..."
+          # Decodes raw Base64 text directly from AOSP to bypass any 404s or Github formatting issues
+          curl -sSL "https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/mkdtboimg.py?format=TEXT" | base64 -d > /usr/bin/mkdtimg
+          
+          # Safety fallback just in case the API rate limits
+          if ! grep -q "def main" /usr/bin/mkdtimg; then
+            echo "[!] API failed, falling back to raw LineageOS 20.0 repository..."
+            wget -q https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-20.0/utils/src/mkdtboimg.py -O /usr/bin/mkdtimg
+          fi
+
+          chmod +x /usr/bin/mkdtimg
+          sed -i 's/env python/env python3/g' /usr/bin/mkdtimg
+          echo "✅ mkdtimg tool successfully installed to $(which mkdtimg)"
         shell: bash
 
       - name: ⌛️ Compilation environment preparation
@@ -220,4 +234,4 @@ jobs:
         with:
           name: sunfish-ReSukiSU-BootImg
           path: ${{ env.MAGISK_ZIP_NAME }}
-          compression-level: 0
+          compression-level: 0 
