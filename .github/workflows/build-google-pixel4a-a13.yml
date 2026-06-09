@@ -63,7 +63,7 @@ env:
   SUSFS_FOLDER_FIXED: "" 
   SUSFS_PATCH_FIXED: "" 
 
-  REKERNEL_ENABLE: "false" 
+  REKERNEL_ENABLE: "true" 
   DROIDSPACES_ENABLE: "false" 
 
   HOOK_METHOD: "syscall" 
@@ -74,7 +74,7 @@ env:
   KPM_KPATCH_NEXT: "false" 
   KPM_PATCH_SOURCE: "" 
 
-  BASEBAND_GUARD_ENABLE: "false" 
+  BASEBAND_GUARD_ENABLE: "true" 
   BASEBAND_GUARD_BOOT: "false" 
 
   # Set back to false since Pixel uses an appended DTB inside the kernel image itself!
