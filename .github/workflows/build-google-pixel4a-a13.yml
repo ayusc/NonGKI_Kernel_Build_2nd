@@ -197,8 +197,8 @@ jobs:
           magiskboot unpack ../stock_boot.img
 
           echo "[+] Extracting Image from AnyKernel3 ZIP..."
-          # We use wildcard *Image* just in case the zip contains Image.gz or Image.gz-dtb instead of purely "Image"
-          unzip -j ../${{ env.PACK_NAME }} "*Image*" -d .
+          # Fix: Target the device_kernel/ folder where the ZIP was generated
+          unzip -j ../device_kernel/${{ env.PACK_NAME }} "*Image*" -d .
 
           echo "[+] Replacing stock kernel with extracted Image..."
           mv Image* kernel
@@ -222,7 +222,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sunfish-ReSukiSU-AnyKernel3
-          path: ${{ env.PACK_NAME }}
+          path: device_kernel/${{ env.PACK_NAME }}
           compression-level: 0 
 
       - name: 📤 Upload Boot Image ZIP
