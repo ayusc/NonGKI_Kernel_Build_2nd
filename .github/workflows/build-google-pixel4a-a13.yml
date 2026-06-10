@@ -3,9 +3,6 @@ name: Build Google Pixel 4a (Stock A13)
 on:
   workflow_call:
   workflow_dispatch:
-  push:
-    branches:
-      - mainline
 
 env:
   # Device env
