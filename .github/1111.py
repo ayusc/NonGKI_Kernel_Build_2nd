@@ -1,4 +1,4 @@
-name: Build Google Pixel 4a (Stock A13)
+name: Build Google Pixel 4a
 
 on:
   workflow_call:
@@ -17,7 +17,7 @@ env:
   EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ DTC=/usr/bin/dtc"
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
-  KERNEL_BRANCH : "android-msm-sunfish-4.14-android13-qpr3"
+  KERNEL_BRANCH : "android-msm-sunfish-4.14-android13"
 
   # Proton Clang (Clang 13)
   CLANG_SOURCE : "https://github.com/kdrag0n/proton-clang.git"
@@ -94,14 +94,11 @@ env:
 
 jobs:
   build-kernel:
-    name: Google Pixel 4a (Stock A13 + ReSukiSU)
+    name: Google Pixel 4a 
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
     env:
-      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
-      CCACHE_NOHASHDIR: "true"
-      CCACHE_HARDLINK: "true"
       DEBIAN_FRONTEND: noninteractive 
 
     steps:
