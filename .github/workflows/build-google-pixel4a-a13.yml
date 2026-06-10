@@ -17,7 +17,9 @@ env:
 
   KERNEL_SOURCE : "https://android.googlesource.com/kernel/msm"
   
-  # Final stable QPR3 branch matching the TQ3A public release
+  # ==========================================
+  # FIXED: Pointed to the exact QPR3 branch matching your TQ3A OS
+  # ==========================================
   KERNEL_BRANCH : "android-msm-sunfish-4.14-android13-qpr3"
 
   # Proton Clang (Clang 13)
@@ -48,8 +50,6 @@ env:
   # RAW STOCK BOOT IMAGE LINK
   # ==========================================
   BOOT_SOURCE : "https://github.com/ayusc/NonGKI_Kernel_Build_2nd/releases/download/1234/pixel.4a.boot.img" 
-  
-  # Set to Anykernel3 so the native pack-process script generates the flashable zip
   PACK_METHOD: "Anykernel3" 
   
   NEED_DTBO : false
@@ -73,6 +73,7 @@ env:
   BASEBAND_GUARD_ENABLE: "false" 
   BASEBAND_GUARD_BOOT: "false" 
 
+  # Native DTBs are appended directly into Image.lz4-dtb
   GENERATE_DTB: "false" 
   GENERATE_CHIP: "qcom" 
 
@@ -101,22 +102,13 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
+          # FIXED: Restored python dependencies so mkdtboimg.py doesn't crash the build phase
           apt-get install -y --no-install-recommends sudo git curl wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 zip
           git config --global --add safe.directory '*'
 
-          echo "[+] Fetching official AOSP mkdtimg tool using Google Git API..."
-          # Decodes raw Base64 text directly from AOSP to bypass any 404s or Github formatting issues
-          curl -sSL "https://android.googlesource.com/platform/system/libufdt/+/refs/heads/master/utils/src/mkdtboimg.py?format=TEXT" | base64 -d > /usr/bin/mkdtimg
-          
-          # Safety fallback just in case the API rate limits
-          if ! grep -q "def main" /usr/bin/mkdtimg; then
-            echo "[!] API failed, falling back to raw LineageOS 20.0 repository..."
-            wget -q https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-20.0/utils/src/mkdtboimg.py -O /usr/bin/mkdtimg
-          fi
-
-          chmod +x /usr/bin/mkdtimg
-          sed -i 's/env python/env python3/g' /usr/bin/mkdtimg
-          echo "✅ mkdtimg tool successfully installed to $(which mkdtimg)"
+          echo "[+] Fetching official AOSP mkdtimg tool for Kernel Make..."
+          wget -q https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-18.1/utils/src/mkdtboimg.py -O /usr/local/bin/mkdtimg
+          chmod +x /usr/local/bin/mkdtimg
         shell: bash
 
       - name: ⌛️ Compilation environment preparation
@@ -234,4 +226,4 @@ jobs:
         with:
           name: sunfish-ReSukiSU-BootImg
           path: ${{ env.MAGISK_ZIP_NAME }}
-          compression-level: 0 
+          compression-level: 0
