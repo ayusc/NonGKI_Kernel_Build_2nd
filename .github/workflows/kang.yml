@@ -3,10 +3,7 @@ name: Build
 on:
   workflow_call:
   workflow_dispatch:
-  push:
-    branches:
-      - mainline
-
+  
 env:
   # Device env
   DEVICE_NAME : "google_pixel_4a"
