@@ -132,8 +132,7 @@ jobs:
       - name: 🔗 Patch for no-kprobe
         uses: ./.github/workflows/patch-no-kprobe
 
-      - name: 🪛 Extra Kernel Options
-        run: |
+      run: |
           cd $GITHUB_WORKSPACE/device_kernel
           
           # ReSukiSU manual hook fail-safe
@@ -143,21 +142,18 @@ jobs:
             sed -i '/if (IS_ERR(filename))/i\#ifdef CONFIG_KSU\n\tksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);\n#endif\n' fs/exec.c
             echo "[+] Hook injected successfully."
           fi
+
           # Safety Net 1: Block Clang variable-sized array strictness errors
           echo "[+] Patching cgroup-defs.h to ignore variable-sized type errors..."
           sed -i '1i #pragma clang diagnostic ignored "-Wgnu-variable-sized-type-not-at-end"' include/linux/cgroup-defs.h
+
           # Safety Net 2: Disable problematic 32-bit legacy VDSO to prevent assembler crashes
           echo "[+] Disabling problematic 32-bit VDSO..."
           sed -i 's/CONFIG_VDSO32=y/# CONFIG_VDSO32 is not set/g' arch/arm64/configs/sunfish_defconfig
           sed -i 's/CONFIG_COMPAT_VDSO=y/# CONFIG_COMPAT_VDSO is not set/g' arch/arm64/configs/sunfish_defconfig
           echo "# CONFIG_VDSO32 is not set" >> arch/arm64/configs/sunfish_defconfig
           echo "# CONFIG_COMPAT_VDSO is not set" >> arch/arm64/configs/sunfish_defconfig
-          # Speed up build by disabling LTO (Link Time Optimization)
-          echo "[+] Disabling LTO to speed up linking..."
-          sed -i 's/CONFIG_LTO=y/# CONFIG_LTO is not set/g' arch/arm64/configs/sunfish_defconfig
-          sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/sunfish_defconfig
-          sed -i 's/CONFIG_THINLTO=y/# CONFIG_THINLTO is not set/g' arch/arm64/configs/sunfish_defconfig
-
+          
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
 
