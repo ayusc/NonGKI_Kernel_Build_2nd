@@ -99,6 +99,7 @@ jobs:
     container:
       image: ubuntu:20.04
     env:
+      CCACHE_DISABLE: "1"
       DEBIAN_FRONTEND: noninteractive 
 
     steps:
