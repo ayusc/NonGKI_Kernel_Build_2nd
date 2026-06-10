@@ -103,7 +103,7 @@ jobs:
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
           # FIXED: Restored python dependencies so mkdtboimg.py doesn't crash the build phase
-          apt-get install -y --no-install-recommends sudo git curl wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 zip
+          apt-get install -y --no-install-recommends sudo git curl wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 zip unzip
           git config --global --add safe.directory '*'
 
           echo "[+] Fetching official AOSP mkdtimg tool for Kernel Make..."
@@ -196,8 +196,12 @@ jobs:
           cd repack
           magiskboot unpack ../stock_boot.img
 
-          echo "[+] Replacing stock kernel with freshly compiled ReSukiSU kernel..."
-          cp ../device_kernel/out/arch/arm64/boot/Image.gz-dtb kernel
+          echo "[+] Extracting Image from AnyKernel3 ZIP..."
+          # We use wildcard *Image* just in case the zip contains Image.gz or Image.gz-dtb instead of purely "Image"
+          unzip -j ../${{ env.PACK_NAME }} "*Image*" -d .
+
+          echo "[+] Replacing stock kernel with extracted Image..."
+          mv Image* kernel
 
           echo "[+] Repacking Boot Image..."
           magiskboot repack ../stock_boot.img boot.img
