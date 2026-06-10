@@ -14,7 +14,7 @@ env:
   EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ DTC=/usr/bin/dtc"
 
   KERNEL_SOURCE : "https://github.com/LineageOS/android_kernel_google_msm-4.14.git"
-  KERNEL_BRANCH : "lineage-20.0"
+  KERNEL_BRANCH : "lineage-20"
 
   # Proton Clang (Clang 13)
   CLANG_SOURCE : "https://github.com/kdrag0n/proton-clang.git"
