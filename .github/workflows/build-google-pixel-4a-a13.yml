@@ -75,7 +75,7 @@ env:
   KPM_PATCH_SOURCE: "" 
 
   # Baseband Guard
-  BASEBAND_GUARD_ENABLE: "true"   # Enabled Baseband Guard
+  BASEBAND_GUARD_ENABLE: "false"   # Enabled Baseband Guard
   BASEBAND_GUARD_BOOT: "false"    # Leave false unless you specifically want to block the baseband immediately at boot
 
   GENERATE_DTB: "false" 
