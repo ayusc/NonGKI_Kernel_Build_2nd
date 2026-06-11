@@ -136,12 +136,6 @@ jobs:
       - name: 🪛 Extra Kernel Options
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          
-          # Fix 64-character limit crash in utsrelease.h
-          echo "[+] Stripping Git hashes from version string to prevent 64-char overflow..."
-          echo "#!/bin/bash" > scripts/setlocalversion
-          echo 'echo "-ReSukiSU"' >> scripts/setlocalversion
-          chmod +x scripts/setlocalversion
 
           # Disable problematic 32-bit legacy VDSO to prevent assembler crashes
           echo "[+] Disabling problematic 32-bit VDSO..."
