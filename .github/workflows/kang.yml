@@ -151,8 +151,8 @@ jobs:
           echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/sunfish_defconfig
           
           echo "[+] Disabling Stack Protector Entirely..."
-          sed -i 's/CONFIG_CC_STACKPROTECTOR_STRONG=y/# CONFIG_CC_STACKPROTECTOR_STRONG is not set/g' arch/arm64/configs/sunfish_defconfig
-          sed -i 's/CONFIG_CC_STACKPROTECTOR=y/# CONFIG_CC_STACKPROTECTOR is not set/g' arch/arm64/configs/sunfish_defconfig
+          sed -i '/CONFIG_CC_STACKPROTECTOR/d' arch/arm64/configs/sunfish_defconfig
+          sed -i '/CONFIG_CC_STACKPROTECTOR_STRONG/d' arch/arm64/configs/sunfish_defconfig
           echo "# CONFIG_CC_STACKPROTECTOR_STRONG is not set" >> arch/arm64/configs/sunfish_defconfig
           echo "# CONFIG_CC_STACKPROTECTOR is not set" >> arch/arm64/configs/sunfish_defconfig
 
@@ -179,9 +179,9 @@ jobs:
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
-          # FIXED: Delete the missing haptic function call from the fingerprint driver source code to prevent linker crashes
+          # FIXED: Swap the missing haptic function call with an empty statement to preserve C syntax
           echo "[+] Patching out missing haptics symbol in FPC driver..."
-          sed -i '/hap_ignore_next_request/d' drivers/input/misc/fpc1020_platform_tee.c
+          sed -i 's/hap_ignore_next_request();/;/g' drivers/input/misc/fpc1020_platform_tee.c
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
