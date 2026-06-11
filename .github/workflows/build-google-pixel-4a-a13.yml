@@ -62,7 +62,7 @@ env:
   
   # The name of your patch file without the '.patch' extension. 
   # E.g., if your file is 'susfs_pixel4a_fixed.patch', put 'susfs_pixel4a_fixed' here.
-  SUSFS_PATCH_FIXED: ""
+  SUSFS_PATCH_FIXED: "susfs_sunfish_fixed"
 
   # Re:Kernel
   REKERNEL_ENABLE: "true"         # Enabled Re:Kernel
@@ -80,7 +80,7 @@ env:
 
   GENERATE_DTB: "false" 
   GENERATE_CHIP: "google/qcom_base" 
-  BUILD_DEBUGGER: "true"          
+  BUILD_DEBUGGER: "false"          
   SKIP_PATCH: "false" 
   BUILD_OTHER_CONFIG: "false" 
   MERGE_CONFIG_FILES: ""
@@ -151,7 +151,7 @@ jobs:
           # Fix 64-character UTS_RELEASE limit
           echo "[+] Forcing short kernel version string..."
           echo '#!/bin/sh' > scripts/setlocalversion
-          echo 'echo "-sunfish-KSU"' >> scripts/setlocalversion
+          echo 'echo "-By-Ayus-Chatterjee"' >> scripts/setlocalversion
           chmod +x scripts/setlocalversion
           sed -i 's/CONFIG_LOCALVERSION_AUTO=y/# CONFIG_LOCALVERSION_AUTO is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
 
