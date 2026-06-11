@@ -113,7 +113,7 @@ jobs:
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
           
-          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 bc flex bison libssl-dev libelf-dev libncurses5 libtinfo5 libc6-dev libncurses-dev lz4
+          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 bc flex bison libssl-dev libelf-dev libncurses5 libtinfo5 libc6-dev libncurses-dev lz4 zip unzip
           
           echo "[+] Fetching official AOSP mkdtimg tool..."
           wget https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-18.1/utils/src/mkdtboimg.py -O /usr/bin/mkdtimg
@@ -138,8 +138,6 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
 
-          # FIXED: Swapped hardcoded 'sunfish_defconfig' to dynamically use '$DEFCONFIG_NAME'
-          
           # Disable problematic 32-bit legacy VDSO
           echo "[+] Disabling problematic 32-bit VDSO..."
           sed -i 's/CONFIG_VDSO32=y/# CONFIG_VDSO32 is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
@@ -197,8 +195,32 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
-      - name: 🔩 Pack Process
-        uses: ./.github/workflows/pack-process
+      # FIXED: Replaced generic external action with a custom explicit AnyKernel3 packing script
+      - name: 🔩 Pack Custom AnyKernel3 Zip
+        run: |
+          echo "[+] Cloning AnyKernel3..."
+          git clone --depth=1 -b ${{ env.AK3_BRANCH }} ${{ env.AK3_SOURCE }} AnyKernel3
+          
+          echo "[+] Verifying LZ4 compilation and copying to AK3 folder..."
+          if [ -f "$GITHUB_WORKSPACE/device_kernel/out/arch/arm64/boot/Image.lz4" ]; then
+            cp $GITHUB_WORKSPACE/device_kernel/out/arch/arm64/boot/Image.lz4 AnyKernel3/
+            echo "[+] Image.lz4 successfully copied."
+          else
+            echo "[-] ERROR: Image.lz4 was not found in the output directory!"
+            exit 1
+          fi
+          
+          cd AnyKernel3
+          echo "[+] Cleaning up AnyKernel repository files..."
+          rm -rf .git* README.md
+          
+          echo "[+] Generating flashable zip..."
+          zip -r9 AnyKernel3-Pixel4a-sunfish-KSU.zip *
+          mv AnyKernel3-Pixel4a-sunfish-KSU.zip $GITHUB_WORKSPACE/
 
+      # FIXED: Replaced generic upload action with standard GitHub upload action
       - name: ✏️ Upload Artifacts
-        uses: ./.github/workflows/upload-files
+        uses: actions/upload-artifact@v4
+        with:
+          name: AnyKernel3-Pixel4a-sunfish-KSU
+          path: AnyKernel3-Pixel4a-sunfish-KSU.zip
