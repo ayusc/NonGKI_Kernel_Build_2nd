@@ -75,7 +75,7 @@ env:
   KPM_PATCH_SOURCE: "" 
 
   # Baseband Guard
-  BASEBAND_GUARD_ENABLE: "false"   # Enabled Baseband Guard
+  BASEBAND_GUARD_ENABLE: "true"   # Enabled Baseband Guard
   BASEBAND_GUARD_BOOT: "false"    # Leave false unless you specifically want to block the baseband immediately at boot
 
   GENERATE_DTB: "false" 
@@ -149,14 +149,14 @@ jobs:
           echo "CONFIG_CC_STACKPROTECTOR_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
 
           # Fix 64-character UTS_RELEASE limit
-          echo "[+] Forcing short kernel version string..."
+          echo "[+] Forcing kernel version string..."
           echo '#!/bin/sh' > scripts/setlocalversion
           echo 'echo "-By-Ayus-Chatterjee"' >> scripts/setlocalversion
           chmod +x scripts/setlocalversion
           sed -i 's/CONFIG_LOCALVERSION_AUTO=y/# CONFIG_LOCALVERSION_AUTO is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
 
           # Prevent Proton Clang's multi-line version string from breaking C syntax
-          echo "[+] Fixing compiler version string injection..."
+          echo "[+] Fixing compiler version..."
           sed -i 's/.*LINUX_COMPILER.*/echo "#define LINUX_COMPILER \\"Proton Clang 13\\""/g' scripts/mkcompile_h
 
           # Force LZ4 Compression
@@ -166,15 +166,18 @@ jobs:
           echo "CONFIG_KERNEL_LZ4=y" >> arch/arm64/configs/$DEFCONFIG_NAME
 
           # Patch Makefile to suppress unknown warnings and GNU layout structures
-          echo "[+] Patching Makefile to suppress unknown warnings and GNU layout structures..."
+          echo "[+] Patching Makefile to suppress unknown warnings..."
           echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
           # Swap the missing haptic function call with an empty statement to preserve C syntax
-          echo "[+] Patching out missing haptics symbol in FPC driver..."
+          echo "[+] Fix a critical bug ..."
           sed -i 's/hap_ignore_next_request();/;/g' drivers/input/misc/fpc1020_platform_tee.c
 
+          echo "[+] Fix Baseband Guard..."
+          sed -i "s/'#define DEFINE_LSM(lsm)'/\"\\\\#define DEFINE_LSM(lsm)\"/g" security/selinux/Makefile
+          
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
 
@@ -187,7 +190,6 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
-      # FIXED: Replaced generic external action with a custom explicit AnyKernel3 packing script
       - name: 🔩 Pack Custom AnyKernel3 Zip
         run: |
           echo "[+] Cloning AnyKernel3..."
