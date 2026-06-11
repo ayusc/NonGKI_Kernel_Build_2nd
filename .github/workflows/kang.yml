@@ -16,7 +16,6 @@ env:
 
   CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
   
-  # FIXED: Cleaned up EXTRA_CMDS to prevent shell quoting errors during compilation
   EXTRA_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++"
 
   KERNEL_SOURCE : "https://github.com/engstk/pxl4a"
@@ -163,14 +162,18 @@ jobs:
           chmod +x scripts/setlocalversion
           sed -i 's/CONFIG_LOCALVERSION_AUTO=y/# CONFIG_LOCALVERSION_AUTO is not set/g' arch/arm64/configs/sunfish_defconfig
 
+          # FIXED: Prevent Proton Clang's multi-line version string from breaking C syntax
+          echo "[+] Fixing compiler version string injection..."
+          sed -i 's/.*LINUX_COMPILER.*/echo "#define LINUX_COMPILER \\"Proton Clang 13\\""/g' scripts/mkcompile_h
+
           # Force LZ4 Compression
           echo "[+] Setting LZ4 Kernel Compression..."
           sed -i 's/CONFIG_KERNEL_GZIP=y/# CONFIG_KERNEL_GZIP is not set/g' arch/arm64/configs/sunfish_defconfig
           sed -i 's/CONFIG_KERNEL_LZMA=y/# CONFIG_KERNEL_LZMA is not set/g' arch/arm64/configs/sunfish_defconfig
           echo "CONFIG_KERNEL_LZ4=y" >> arch/arm64/configs/sunfish_defconfig
 
-          # FIXED: Surgically append the exact overrides needed to ignore Clang 13 syntax warnings without breaking other flags
-          echo "[+] Patching Makefile to gracefully ignore Clang 13 syntax warnings..."
+          # Patch Makefile to gracefully ignore Clang 13 syntax warnings
+          echo "[+] Patching Makefile to suppress unknown warnings and GNU layout structures..."
           echo "KBUILD_CFLAGS += -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign" >> Makefile
           echo "KBUILD_HOSTCFLAGS += -Wno-unknown-warning-option" >> Makefile
           echo "HOSTCFLAGS += -Wno-unknown-warning-option" >> Makefile
