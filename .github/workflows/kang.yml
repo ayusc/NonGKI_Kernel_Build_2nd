@@ -3,6 +3,9 @@ name: Build
 on:
   workflow_call:
   workflow_dispatch:
+  push:
+    branches:
+      - mainline
   
 env:
   # Device env
@@ -14,7 +17,7 @@ env:
   EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ DTC=/usr/bin/dtc"
 
   KERNEL_SOURCE : "https://github.com/LineageOS/android_kernel_google_msm-4.14.git"
-  KERNEL_BRANCH : "lineage-20"
+  KERNEL_BRANCH : "lineage-20.0"
 
   # Proton Clang (Clang 13)
   CLANG_SOURCE : "https://github.com/kdrag0n/proton-clang.git"
@@ -132,6 +135,18 @@ jobs:
       - name: 🪛 Extra Kernel Options
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
+          
+          # Fix 64-character limit crash in utsrelease.h
+          echo "[+] Stripping Git hashes from version string to prevent 64-char overflow..."
+          echo "#!/bin/bash" > scripts/setlocalversion
+          echo 'echo "-ReSukiSU"' >> scripts/setlocalversion
+          chmod +x scripts/setlocalversion
+
+          # Disable LTO
+          echo "[+] Disabling LTO..."
+          sed -i 's/CONFIG_LTO=y/# CONFIG_LTO is not set/g' arch/arm64/configs/sunfish_defconfig
+          sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/sunfish_defconfig
+          sed -i 's/CONFIG_THINLTO=y/# CONFIG_THINLTO is not set/g' arch/arm64/configs/sunfish_defconfig
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
