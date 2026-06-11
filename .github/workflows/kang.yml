@@ -150,10 +150,11 @@ jobs:
           sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/sunfish_defconfig
           echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/sunfish_defconfig
           
-          # Disable Strong Stack Protector
-          echo "[+] Disabling Strong Stack Protector..."
+          echo "[+] Disabling Stack Protector Entirely..."
           sed -i 's/CONFIG_CC_STACKPROTECTOR_STRONG=y/# CONFIG_CC_STACKPROTECTOR_STRONG is not set/g' arch/arm64/configs/sunfish_defconfig
-          echo "CONFIG_CC_STACKPROTECTOR_NONE=y" >> arch/arm64/configs/sunfish_defconfig
+          sed -i 's/CONFIG_CC_STACKPROTECTOR=y/# CONFIG_CC_STACKPROTECTOR is not set/g' arch/arm64/configs/sunfish_defconfig
+          echo "# CONFIG_CC_STACKPROTECTOR_STRONG is not set" >> arch/arm64/configs/sunfish_defconfig
+          echo "# CONFIG_CC_STACKPROTECTOR is not set" >> arch/arm64/configs/sunfish_defconfig
 
           # Fix 64-character UTS_RELEASE limit
           echo "[+] Forcing short kernel version string..."
