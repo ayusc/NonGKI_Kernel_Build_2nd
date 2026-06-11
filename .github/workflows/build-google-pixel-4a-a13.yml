@@ -209,9 +209,7 @@ jobs:
           echo "[+] Generating flashable zip..."
           zip -r9 AnyKernel3-Pixel4a-sunfish-KSU.zip *
           mv AnyKernel3-Pixel4a-sunfish-KSU.zip $GITHUB_WORKSPACE/
-
-          echo "[+] Fix BBG"
-          sed -i 's/\r//g' security/selinux/Makefile
+          
         shell: bash
 
       # FIXED: Replaced generic upload action with standard GitHub upload action
