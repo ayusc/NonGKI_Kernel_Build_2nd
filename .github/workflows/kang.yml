@@ -138,30 +138,32 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
 
+          # FIXED: Swapped hardcoded 'sunfish_defconfig' to dynamically use '$DEFCONFIG_NAME'
+          
           # Disable problematic 32-bit legacy VDSO
           echo "[+] Disabling problematic 32-bit VDSO..."
-          sed -i 's/CONFIG_VDSO32=y/# CONFIG_VDSO32 is not set/g' arch/arm64/configs/sunfish_defconfig
-          sed -i 's/CONFIG_COMPAT_VDSO=y/# CONFIG_COMPAT_VDSO is not set/g' arch/arm64/configs/sunfish_defconfig
-          echo "# CONFIG_VDSO32 is not set" >> arch/arm64/configs/sunfish_defconfig
-          echo "# CONFIG_COMPAT_VDSO is not set" >> arch/arm64/configs/sunfish_defconfig
+          sed -i 's/CONFIG_VDSO32=y/# CONFIG_VDSO32 is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
+          sed -i 's/CONFIG_COMPAT_VDSO=y/# CONFIG_COMPAT_VDSO is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
+          echo "# CONFIG_VDSO32 is not set" >> arch/arm64/configs/$DEFCONFIG_NAME
+          echo "# CONFIG_COMPAT_VDSO is not set" >> arch/arm64/configs/$DEFCONFIG_NAME
 
           # Disable LTO
           echo "[+] Disabling LTO..."
-          sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/sunfish_defconfig
-          echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/sunfish_defconfig
+          sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
+          echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
           
+          # Disable Strong Stack Protector
           echo "[+] Disabling Stack Protector Entirely..."
-          sed -i '/CONFIG_CC_STACKPROTECTOR/d' arch/arm64/configs/sunfish_defconfig
-          sed -i '/CONFIG_CC_STACKPROTECTOR_STRONG/d' arch/arm64/configs/sunfish_defconfig
-          echo "# CONFIG_CC_STACKPROTECTOR_STRONG is not set" >> arch/arm64/configs/sunfish_defconfig
-          echo "# CONFIG_CC_STACKPROTECTOR is not set" >> arch/arm64/configs/sunfish_defconfig
+          sed -i '/CONFIG_CC_STACKPROTECTOR/d' arch/arm64/configs/$DEFCONFIG_NAME
+          echo "# CONFIG_CC_STACKPROTECTOR_STRONG is not set" >> arch/arm64/configs/$DEFCONFIG_NAME
+          echo "CONFIG_CC_STACKPROTECTOR_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
 
           # Fix 64-character UTS_RELEASE limit
           echo "[+] Forcing short kernel version string..."
           echo '#!/bin/sh' > scripts/setlocalversion
           echo 'echo "-sunfish-KSU"' >> scripts/setlocalversion
           chmod +x scripts/setlocalversion
-          sed -i 's/CONFIG_LOCALVERSION_AUTO=y/# CONFIG_LOCALVERSION_AUTO is not set/g' arch/arm64/configs/sunfish_defconfig
+          sed -i 's/CONFIG_LOCALVERSION_AUTO=y/# CONFIG_LOCALVERSION_AUTO is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
 
           # Prevent Proton Clang's multi-line version string from breaking C syntax
           echo "[+] Fixing compiler version string injection..."
@@ -169,9 +171,9 @@ jobs:
 
           # Force LZ4 Compression
           echo "[+] Setting LZ4 Kernel Compression..."
-          sed -i 's/CONFIG_KERNEL_GZIP=y/# CONFIG_KERNEL_GZIP is not set/g' arch/arm64/configs/sunfish_defconfig
-          sed -i 's/CONFIG_KERNEL_LZMA=y/# CONFIG_KERNEL_LZMA is not set/g' arch/arm64/configs/sunfish_defconfig
-          echo "CONFIG_KERNEL_LZ4=y" >> arch/arm64/configs/sunfish_defconfig
+          sed -i 's/CONFIG_KERNEL_GZIP=y/# CONFIG_KERNEL_GZIP is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
+          sed -i 's/CONFIG_KERNEL_LZMA=y/# CONFIG_KERNEL_LZMA is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
+          echo "CONFIG_KERNEL_LZ4=y" >> arch/arm64/configs/$DEFCONFIG_NAME
 
           # Patch Makefile to suppress unknown warnings and GNU layout structures
           echo "[+] Patching Makefile to suppress unknown warnings and GNU layout structures..."
@@ -179,7 +181,7 @@ jobs:
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
-          # FIXED: Swap the missing haptic function call with an empty statement to preserve C syntax
+          # Swap the missing haptic function call with an empty statement to preserve C syntax
           echo "[+] Patching out missing haptics symbol in FPC driver..."
           sed -i 's/hap_ignore_next_request();/;/g' drivers/input/misc/fpc1020_platform_tee.c
 
