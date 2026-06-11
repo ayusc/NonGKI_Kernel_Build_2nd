@@ -32,7 +32,7 @@ env:
   GCC_32_BRANCH : ""
 
   DEFCONFIG_SOURCE: ""
-  DEFCONFIG_NAME : "blu_spark_defconfig"
+  DEFCONFIG_NAME : "sunfish_defconfig"
   DEFCONFIG_ORIGIN_IMAGE: ""
   DEFCONFIG_FROM_BOOT: false
 
@@ -111,8 +111,14 @@ jobs:
       - name: 🛠️ Setup Container Environment
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          apt-get update -y   
+          apt-get update -y
+          
           apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 bc flex bison libssl-dev libelf-dev libncurses5 libtinfo5 libc6-dev libncurses-dev lz4
+          
+          echo "[+] Fetching official AOSP mkdtimg tool..."
+          wget https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-18.1/utils/src/mkdtboimg.py -O /usr/bin/mkdtimg
+          chmod +x /usr/bin/mkdtimg
+          
           git config --global --add safe.directory '*'
         shell: bash
 
@@ -166,17 +172,15 @@ jobs:
           sed -i 's/CONFIG_KERNEL_LZMA=y/# CONFIG_KERNEL_LZMA is not set/g' arch/arm64/configs/sunfish_defconfig
           echo "CONFIG_KERNEL_LZ4=y" >> arch/arm64/configs/sunfish_defconfig
 
-          # FIXED: Added the specific overrides for inline assembly and array tautology, plus a global -Wno-error catch-all
+          # Patch Makefile to suppress unknown warnings and GNU layout structures
           echo "[+] Patching Makefile to suppress unknown warnings and GNU layout structures..."
           echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
-          
-          # Remove the problematic function declaration at the top
-          sed -i '/void hap_ignore_next_request/d' drivers/input/misc/fpc1020_platform_tee.c
-    
-          # Remove the function call in the IRQ handler
-          sed -i '/hap_ignore_next_request()/d' drivers/input/misc/fpc1020_platform_tee.c
+
+          # FIXED: Delete the missing haptic function call from the fingerprint driver source code to prevent linker crashes
+          echo "[+] Patching out missing haptics symbol in FPC driver..."
+          sed -i '/hap_ignore_next_request/d' drivers/input/misc/fpc1020_platform_tee.c
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
