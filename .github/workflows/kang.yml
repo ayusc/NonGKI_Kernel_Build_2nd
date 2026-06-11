@@ -162,7 +162,7 @@ jobs:
           chmod +x scripts/setlocalversion
           sed -i 's/CONFIG_LOCALVERSION_AUTO=y/# CONFIG_LOCALVERSION_AUTO is not set/g' arch/arm64/configs/sunfish_defconfig
 
-          # FIXED: Prevent Proton Clang's multi-line version string from breaking C syntax
+          # Prevent Proton Clang's multi-line version string from breaking C syntax
           echo "[+] Fixing compiler version string injection..."
           sed -i 's/.*LINUX_COMPILER.*/echo "#define LINUX_COMPILER \\"Proton Clang 13\\""/g' scripts/mkcompile_h
 
@@ -172,11 +172,11 @@ jobs:
           sed -i 's/CONFIG_KERNEL_LZMA=y/# CONFIG_KERNEL_LZMA is not set/g' arch/arm64/configs/sunfish_defconfig
           echo "CONFIG_KERNEL_LZ4=y" >> arch/arm64/configs/sunfish_defconfig
 
-          # Patch Makefile to gracefully ignore Clang 13 syntax warnings
+          # FIXED: Added the specific overrides for inline assembly and array tautology, plus a global -Wno-error catch-all
           echo "[+] Patching Makefile to suppress unknown warnings and GNU layout structures..."
-          echo "KBUILD_CFLAGS += -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign" >> Makefile
-          echo "KBUILD_HOSTCFLAGS += -Wno-unknown-warning-option" >> Makefile
-          echo "HOSTCFLAGS += -Wno-unknown-warning-option" >> Makefile
+          echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare" >> Makefile
+          echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option" >> Makefile
+          echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option" >> Makefile
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
