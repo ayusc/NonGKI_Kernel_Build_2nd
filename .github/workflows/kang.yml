@@ -40,7 +40,7 @@ env:
   KERNELSU_BRANCH : ""
 
   KERNELSU_AUTO_GET : "true"
-  KERNELSU_AUTO_FORK : "next" 
+  KERNELSU_AUTO_FORK : "resukisu" 
 
   SUSFS_ENABLE : false
   SUSFS_FIXED : false
@@ -174,7 +174,7 @@ jobs:
 
           # FIXED: Added the specific overrides for inline assembly and array tautology, plus a global -Wno-error catch-all
           echo "[+] Patching Makefile to suppress unknown warnings and GNU layout structures..."
-          echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare" >> Makefile
+          echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration" >> Makefile
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option" >> Makefile
 
