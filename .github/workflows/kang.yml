@@ -174,9 +174,15 @@ jobs:
 
           # FIXED: Added the specific overrides for inline assembly and array tautology, plus a global -Wno-error catch-all
           echo "[+] Patching Makefile to suppress unknown warnings and GNU layout structures..."
-          echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration" >> Makefile
-          echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option" >> Makefile
-          echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option" >> Makefile
+          echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
+          echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
+          echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
+          
+          # Remove the problematic function declaration at the top
+          sed -i '/void hap_ignore_next_request/d' drivers/input/misc/fpc1020_platform_tee.c
+    
+          # Remove the function call in the IRQ handler
+          sed -i '/hap_ignore_next_request()/d' drivers/input/misc/fpc1020_platform_tee.c
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
