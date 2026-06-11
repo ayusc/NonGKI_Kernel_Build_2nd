@@ -14,7 +14,8 @@ env:
 
   CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
   
-  EXTRA_CMDS : "LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ DTC=/usr/bin/dtc"
+  # FIXED: Added CLANG_TRIPLE=aarch64-linux-gnu- to fix the stack-protector error
+  EXTRA_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++ DTC=/usr/bin/dtc"
 
   KERNEL_SOURCE : "https://github.com/engstk/pxl4a"
   KERNEL_BRANCH : "blu_spark-13"
@@ -38,7 +39,7 @@ env:
   KERNELSU_BRANCH : ""
 
   KERNELSU_AUTO_GET : "true"
-  KERNELSU_AUTO_FORK : "resukisu" 
+  KERNELSU_AUTO_FORK : "next" 
 
   SUSFS_ENABLE : false
   SUSFS_FIXED : false
@@ -110,8 +111,8 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
-          # Added python-is-python3 to properly execute the mkdtimg python script
-          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3
+          # FIXED: Added bc, flex, bison, libssl-dev, and libelf-dev (required for kernel compilation)
+          apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 bc flex bison libssl-dev libelf-dev
           
           echo "[+] Fetching official AOSP mkdtimg tool..."
           wget https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-18.1/utils/src/mkdtboimg.py -O /usr/bin/mkdtimg
@@ -150,9 +151,9 @@ jobs:
           echo "# CONFIG_COMPAT_VDSO is not set" >> arch/arm64/configs/sunfish_defconfig
 
           # Disable LTO
-          #echo "[+] Disabling LTO..."
-          #sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/sunfish_defconfig
-          #echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/sunfish_defconfig
+          echo "[+] Disabling LTO..."
+          sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/sunfish_defconfig
+          echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/sunfish_defconfig
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
