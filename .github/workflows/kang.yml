@@ -150,9 +150,9 @@ jobs:
           echo "# CONFIG_COMPAT_VDSO is not set" >> arch/arm64/configs/sunfish_defconfig
 
           # Disable LTO
-          echo "[+] Disabling LTO..."
-          sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/sunfish_defconfig
-          echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/sunfish_defconfig
+          #echo "[+] Disabling LTO..."
+          #sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/sunfish_defconfig
+          #echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/sunfish_defconfig
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
