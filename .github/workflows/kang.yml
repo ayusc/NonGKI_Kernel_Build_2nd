@@ -142,11 +142,17 @@ jobs:
           echo 'echo "-ReSukiSU"' >> scripts/setlocalversion
           chmod +x scripts/setlocalversion
 
+          # Disable problematic 32-bit legacy VDSO to prevent assembler crashes
+          echo "[+] Disabling problematic 32-bit VDSO..."
+          sed -i 's/CONFIG_VDSO32=y/# CONFIG_VDSO32 is not set/g' arch/arm64/configs/sunfish_defconfig
+          sed -i 's/CONFIG_COMPAT_VDSO=y/# CONFIG_COMPAT_VDSO is not set/g' arch/arm64/configs/sunfish_defconfig
+          echo "# CONFIG_VDSO32 is not set" >> arch/arm64/configs/sunfish_defconfig
+          echo "# CONFIG_COMPAT_VDSO is not set" >> arch/arm64/configs/sunfish_defconfig
+
           # Disable LTO
           echo "[+] Disabling LTO..."
-          sed -i 's/CONFIG_LTO=y/# CONFIG_LTO is not set/g' arch/arm64/configs/sunfish_defconfig
           sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/sunfish_defconfig
-          sed -i 's/CONFIG_THINLTO=y/# CONFIG_THINLTO is not set/g' arch/arm64/configs/sunfish_defconfig
+          echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/sunfish_defconfig
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
