@@ -18,7 +18,7 @@ env:
   EXTRA_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++"
 
   KERNEL_SOURCE : "https://github.com/engstk/pxl4a"
-  KERNEL_BRANCH : "blu_spark-13"
+  KERNEL_BRANCH : "blu_spark_defconfig"
 
   # Proton Clang (Clang 13)
   CLANG_SOURCE : "https://github.com/kdrag0n/proton-clang.git"
