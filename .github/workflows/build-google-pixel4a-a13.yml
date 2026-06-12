@@ -7,7 +7,7 @@ on:
     branches:
       - mainline
     paths:
-      - '.github/workflows/build-google-pixel-4a-a13.yml'
+      - '.github/workflows/build-google-pixel4a-a13.yml'
 
 env:
   # Device env
@@ -68,7 +68,7 @@ env:
   SUSFS_FOLDER_FIXED: "pixel_4a" # Fill in your patch prefix directory here. Leave it blank if there isn't one. -> your_folder
   SUSFS_PATCH_FIXED: "susfs_sunfish_fixed" # Fill in your patches here. If there are multiple patches, please separate them with a comma. Leave it blank if there isn't one. -> patch1,patch2
 
-  REKERNEL_ENABLE: "true" # if u need Re:Kernel.
+  REKERNEL_ENABLE: "false" # if u need Re:Kernel.
   DROIDSPACES_ENABLE: "false" # if u need Droidspaces or LXC/Docker.
 
   HOOK_METHOD: "syscall" # Manual hook method -> syscall.
@@ -80,7 +80,7 @@ env:
   KPM_KPATCH_NEXT: "false" # If u want hook KPatch-Next in build step.
   KPM_PATCH_SOURCE: ""
 
-  BASEBAND_GUARD_ENABLE: "true" # if u want prevent unauthorized writes to critical partitions/device nodes.
+  BASEBAND_GUARD_ENABLE: "false" # if u want prevent unauthorized writes to critical partitions/device nodes.
   BASEBAND_GUARD_BOOT: "false" # if u want to protect boot partition.
 
   GENERATE_DTB: "false" # if u kernel need DTB , but cannot auto generate it. (Only Anykernel3).
@@ -98,7 +98,7 @@ jobs:
   build-kernel:
     name: Google Pixel 4a
     runs-on: ubuntu-latest # u can changed to ubuntu 22.04, and need container set ubuntu-latest
-    container: ubuntu:20.04 # if u need use arch linux -> archlinux/archlinux:latest or ubuntu 20.04 -> ubuntu:focal
+    container: ubuntu:focal # if u need use arch linux -> archlinux/archlinux:latest or ubuntu 20.04 -> ubuntu:focal
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
@@ -200,14 +200,41 @@ jobs:
         uses: ./.github/workflows/patch-baseband-guard
 
       - name: ❗ Pixel 4a BBG Only
+        if: env.BASEBAND_GUARD_ENABLE == 'true'
+        shell: bash
         run: |
           # Only ${{ env.DEVICE_NAME }} use it.
           cd $GITHUB_WORKSPACE/device_kernel
-
           echo "[+] Fixed BBG"
           sed -i "s|grep -q '#define DEFINE_LSM(lsm)'|grep -q '\\\#define DEFINE_LSM(lsm)'|" security/selinux/Makefile
+
+      - name: 📦 Archive Patched Files for Review
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+          mkdir -p $GITHUB_WORKSPACE/patched_files
+          
+          echo "[+] Gathering modified files..."
+          # Use git to find all files modified by your patch scripts
+          git status -s | grep -E '^( M|M |A |A|AM|MM|\?\?)' | awk '{print $2}' | while read file; do
+            if [ -f "$file" ]; then
+              mkdir -p "$GITHUB_WORKSPACE/patched_files/$(dirname "$file")"
+              cp "$file" "$GITHUB_WORKSPACE/patched_files/$file"
+            fi
+          done
+          
+          echo "[+] Gathering reject files (if any)..."
+          find . -name "*.rej" -exec cp --parents {} $GITHUB_WORKSPACE/patched_files/ \; || true
+          
+          cd $GITHUB_WORKSPACE/patched_files
+          zip -r $GITHUB_WORKSPACE/patched_files_review.zip .
         shell: bash
 
+      - name: 📤 Upload Patched Files Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Patched-Files-Review
+          path: ${{ github.workspace }}/patched_files_review.zip
+      
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
