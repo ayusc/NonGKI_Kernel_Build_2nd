@@ -1,4 +1,4 @@
-name: Build Google Pixel 4a (Sunfish)
+name: Build Google Pixel 4a (Stock A13)
 
 on:
   workflow_call:
