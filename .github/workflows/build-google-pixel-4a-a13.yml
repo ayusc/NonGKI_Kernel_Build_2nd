@@ -174,9 +174,6 @@ jobs:
           # Swap the missing haptic function call with an empty statement to preserve C syntax
           echo "[+] Fix a critical bug ..."
           sed -i 's/hap_ignore_next_request();/;/g' drivers/input/misc/fpc1020_platform_tee.c
-
-          echo "[+] Fix Baseband Guard..."
-          sed -i "s/'#define DEFINE_LSM(lsm)'/\"\\\\#define DEFINE_LSM(lsm)\"/g" security/selinux/Makefile
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
@@ -186,6 +183,26 @@ jobs:
 
       - name: 🔒 Patch Kernel of Baseband Guard
         uses: ./.github/workflows/patch-baseband-guard
+
+      - name: 🔒 Patch Kernel of Baseband Guard
+        uses: ./.github/workflows/patch-baseband-guard
+
+      # --- NEW STEPS FOR INVESTIGATION ---
+      - name: 📦 Test Susfs patches
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+          echo "[+] Zipping fs and security/selinux directories..."
+          zip -r9 $GITHUB_WORKSPACE/investigate-dirs.zip fs/ security/selinux/
+        shell: bash
+
+      - name: 📤 Upload investigation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: investigate-dirs
+          path: investigate-dirs.zip
+
+      - name: 🚀 Build Process
+        uses: ./.github/workflows/build-process
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
