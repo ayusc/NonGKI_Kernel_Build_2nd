@@ -166,13 +166,8 @@ jobs:
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
-          echo "[+] Enabling LZ4 and ZSTD Decompression"
-          echo "CONFIG_LZ4_COMPRESS=y" >> arch/arm64/configs/$DEFCONFIG_NAME
-          echo "CONFIG_LZ4_DECOMPRESS=y" >> arch/arm64/configs/$DEFCONFIG_NAME
-          echo "CONFIG_DECOMPRESS_LZ4=y" >> arch/arm64/configs/$DEFCONFIG_NAME
-          echo "CONFIG_ZSTD_COMPRESS=y" >> arch/arm64/configs/$DEFCONFIG_NAME
-          echo "CONFIG_ZSTD_DECOMPRESS=y" >> arch/arm64/configs/$DEFCONFIG_NAME
-          echo "CONFIG_DECOMPRESS_ZSTD=y" >> arch/arm64/configs/$DEFCONFIG_NAME
+          echo "[+] Disabling Incremental FS"
+          sed -i 's/CONFIG_INCREMENTAL_FS=m/# CONFIG_INCREMENTAL_FS is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
 
           # Fix missing haptic function causing build failure
           echo "[+] Fix a critical bug"
