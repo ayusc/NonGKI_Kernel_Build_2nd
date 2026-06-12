@@ -104,13 +104,7 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
-          
           apt-get install -y --no-install-recommends sudo git wget ca-certificates binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi device-tree-compiler python3 python3-setuptools python-is-python3 bc flex bison libssl-dev libelf-dev libncurses5 libtinfo5 libc6-dev libncurses-dev lz4 zip unzip
-          
-          echo "[+] Fetching official AOSP mkdtimg tool..."
-          wget https://raw.githubusercontent.com/LineageOS/android_system_libufdt/lineage-18.1/utils/src/mkdtboimg.py -O /usr/bin/mkdtimg
-          chmod +x /usr/bin/mkdtimg
-          
           git config --global --add safe.directory '*'
         shell: bash
 
@@ -148,22 +142,14 @@ jobs:
           echo "# CONFIG_CC_STACKPROTECTOR_STRONG is not set" >> arch/arm64/configs/$DEFCONFIG_NAME
           echo "CONFIG_CC_STACKPROTECTOR_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
 
-          # Fix 64-character UTS_RELEASE limit
           echo "[+] Forcing kernel version string..."
           echo '#!/bin/sh' > scripts/setlocalversion
-          echo 'echo "-By-Ayus-Chatterjee"' >> scripts/setlocalversion
           chmod +x scripts/setlocalversion
           sed -i 's/CONFIG_LOCALVERSION_AUTO=y/# CONFIG_LOCALVERSION_AUTO is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
 
           # Prevent Proton Clang's multi-line version string from breaking C syntax
           echo "[+] Fixing compiler version..."
           sed -i 's/.*LINUX_COMPILER.*/echo "#define LINUX_COMPILER \\"Proton Clang 13\\""/g' scripts/mkcompile_h
-
-          # Force LZ4 Compression
-          echo "[+] Setting LZ4 Kernel Compression..."
-          sed -i 's/CONFIG_KERNEL_GZIP=y/# CONFIG_KERNEL_GZIP is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
-          sed -i 's/CONFIG_KERNEL_LZMA=y/# CONFIG_KERNEL_LZMA is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
-          echo "CONFIG_KERNEL_LZ4=y" >> arch/arm64/configs/$DEFCONFIG_NAME
 
           # Patch Makefile to suppress unknown warnings and GNU layout structures
           echo "[+] Patching Makefile to suppress unknown warnings..."
@@ -184,25 +170,12 @@ jobs:
       - name: 🔒 Patch Kernel of Baseband Guard
         uses: ./.github/workflows/patch-baseband-guard
 
-      - name: 🛠️ Fix Baseband Guard Makefile Syntax
+      - name: 🛠️ Fix Baseband Guard 
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
           echo "[+] Fixed BBG..."
           sed -i "s|grep -q '#define DEFINE_LSM(lsm)'|grep -q '\\\#define DEFINE_LSM(lsm)'|" security/selinux/Makefile
         shell: bash
-
-      - name: 📦 Test Susfs patches
-        run: |
-          cd $GITHUB_WORKSPACE/device_kernel
-          echo "[+] Zipping fs and security/selinux directories..."
-          zip -r9 $GITHUB_WORKSPACE/investigate-dirs.zip fs/ security/selinux/
-        shell: bash
-
-      - name: 📤 Upload investigation artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: investigate-dirs
-          path: investigate-dirs.zip    
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
