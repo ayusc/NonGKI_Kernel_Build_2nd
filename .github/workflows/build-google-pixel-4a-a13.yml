@@ -170,6 +170,14 @@ jobs:
 
           echo "[+] Baking Incremental FS into vmlinux"
           sed -i 's/CONFIG_INCREMENTAL_FS=m/CONFIG_INCREMENTAL_FS=y/g' arch/arm64/configs/$DEFCONFIG_NAME
+
+          echo "[+] Enabling CONFIG_TMPFS XATTR"
+          echo "CONFIG_TMPFS_XATTR=y" >> arch/arm64/configs/$DEFCONFIG_NAME
+
+          # Force Seccomp Filter for ReSukiSU compatibility
+          echo "[+] Set Seccomp mode to Filter"
+          echo "CONFIG_SECCOMP=y" >> arch/arm64/configs/$DEFCONFIG_NAME
+          echo "CONFIG_SECCOMP_FILTER=y" >> arch/arm64/configs/$DEFCONFIG_NAME
           
           # Fix missing haptic function causing build failure
           echo "[+] Fix a critical bug"
