@@ -184,6 +184,13 @@ jobs:
       - name: 🔒 Patch Kernel of Baseband Guard
         uses: ./.github/workflows/patch-baseband-guard
 
+      - name: 🛠️ Fix Baseband Guard Makefile Syntax
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+          echo "[+] Fixed BBG..."
+          sed -i "s|grep -q '#define DEFINE_LSM(lsm)'|grep -q '\\\#define DEFINE_LSM(lsm)'|" security/selinux/Makefile
+        shell: bash
+
       - name: 📦 Test Susfs patches
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
