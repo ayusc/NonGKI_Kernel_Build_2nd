@@ -65,8 +65,8 @@ env:
   PATCHES_SOURCE: "ayusc/NonGKI_Kernel_Patches" # [your_name]/[your_patch] -> gooder123/NonGKI_Patcher
   PATCHES_BRANCH: "pixel_kernel" # [your_branch] -> main
 
-  SUSFS_FOLDER_FIXED: "pixel_4a" # Fill in your patch prefix directory here. Leave it blank if there isn't one. -> your_folder
-  SUSFS_PATCH_FIXED: "susfs_sunfish_fixed" # Fill in your patches here. If there are multiple patches, please separate them with a comma. Leave it blank if there isn't one. -> patch1,patch2
+  SUSFS_FOLDER_FIXED: "pixel_4_series_official" # Fill in your patch prefix directory here. Leave it blank if there isn't one. -> your_folder
+  SUSFS_PATCH_FIXED: "susfs_fixed" # Fill in your patches here. If there are multiple patches, please separate them with a comma. Leave it blank if there isn't one. -> patch1,patch2
 
   REKERNEL_ENABLE: "false" # if u need Re:Kernel.
   DROIDSPACES_ENABLE: "false" # if u need Droidspaces or LXC/Docker.
@@ -141,31 +141,26 @@ jobs:
           # Only ${{ env.DEVICE_NAME }} use it.
           cd $GITHUB_WORKSPACE/device_kernel
 
-          # Disable problematic 32-bit legacy VDSO
           echo "[+] Disabling problematic 32-bit VDSO"
           sed -i 's/CONFIG_VDSO32=y/# CONFIG_VDSO32 is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
           sed -i 's/CONFIG_COMPAT_VDSO=y/# CONFIG_COMPAT_VDSO is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
           echo "# CONFIG_VDSO32 is not set" >> arch/arm64/configs/$DEFCONFIG_NAME
           echo "# CONFIG_COMPAT_VDSO is not set" >> arch/arm64/configs/$DEFCONFIG_NAME
 
-          # Disable LTO
           echo "[+] Disabling LTO"
           sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
           echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
 
-          # Disable Strong Stack Protector
           echo "[+] Disabling Stack Protector"
           sed -i '/CONFIG_CC_STACKPROTECTOR/d' arch/arm64/configs/$DEFCONFIG_NAME
           echo "# CONFIG_CC_STACKPROTECTOR_STRONG is not set" >> arch/arm64/configs/$DEFCONFIG_NAME
           echo "CONFIG_CC_STACKPROTECTOR_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
 
-          # Force custom kernel version suffix
           echo "[+] Forcing kernel version string"
           echo '#!/bin/sh' > scripts/setlocalversion
           chmod +x scripts/setlocalversion
           sed -i 's/CONFIG_LOCALVERSION_AUTO=y/# CONFIG_LOCALVERSION_AUTO is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
 
-          # Prevent Proton Clang's multi-line version string from breaking C syntax
           echo "[+] Fixing compiler version"
           sed -i 's/.*LINUX_COMPILER.*/echo "#define LINUX_COMPILER \\"Proton Clang 13\\""/g' scripts/mkcompile_h
 
@@ -174,21 +169,11 @@ jobs:
           echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
-
-          echo "[+] Baking Incremental FS into vmlinux"
-          sed -i 's/CONFIG_INCREMENTAL_FS=m/CONFIG_INCREMENTAL_FS=y/g' arch/arm64/configs/$DEFCONFIG_NAME
-
-          echo "[+] Enabling CONFIG_TMPFS XATTR"
-          echo "CONFIG_TMPFS_XATTR=y" >> arch/arm64/configs/$DEFCONFIG_NAME
-
-          # Force Seccomp Filter for ReSukiSU compatibility
-          echo "[+] Set Seccomp mode to Filter"
-          echo "CONFIG_SECCOMP=y" >> arch/arm64/configs/$DEFCONFIG_NAME
-          echo "CONFIG_SECCOMP_FILTER=y" >> arch/arm64/configs/$DEFCONFIG_NAME
           
           # Fix missing haptic function causing build failure
           echo "[+] Fix a critical bug"
           sed -i 's/hap_ignore_next_request();/;/g' drivers/input/misc/fpc1020_platform_tee.c
+          sed -i 's/CONFIG_INCREMENTAL_FS=m/CONFIG_INCREMENTAL_FS=y/g' arch/arm64/configs/$DEFCONFIG_NAME
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
