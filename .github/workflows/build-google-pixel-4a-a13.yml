@@ -174,6 +174,9 @@ jobs:
           # Swap the missing haptic function call with an empty statement to preserve C syntax
           echo "[+] Fix a critical bug ..."
           sed -i 's/hap_ignore_next_request();/;/g' drivers/input/misc/fpc1020_platform_tee.c
+
+          echo "[+] Fix BBG.."
+          sed -i '/ifeq ($(CONFIG_BBG),y)/,$d' security/selinux/Makefile
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
@@ -187,7 +190,6 @@ jobs:
       - name: 🔒 Patch Kernel of Baseband Guard
         uses: ./.github/workflows/patch-baseband-guard
 
-      # --- NEW STEPS FOR INVESTIGATION ---
       - name: 📦 Test Susfs patches
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
