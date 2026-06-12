@@ -175,8 +175,15 @@ jobs:
           echo "[+] Fix a critical bug ..."
           sed -i 's/hap_ignore_next_request();/;/g' drivers/input/misc/fpc1020_platform_tee.c
 
-          echo "[+] Fix BBG.."
-          sed -i '/ifeq ($(CONFIG_BBG),y)/,$d' security/selinux/Makefile
+      - name: 🛠️ Fix Baseband Guard Makefile Syntax
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+          
+          echo "[+] Reverting the corrupted SELinux Makefile..."
+          # This instantly restores the file to its original 29-line state,
+          # completely wiping out the broken syntax and duplications.
+          git checkout -- security/selinux/Makefile
+        shell: bash
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
@@ -201,7 +208,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: investigate-dirs
-          path: investigate-dirs.zip
+          path: investigate-dirs.zip    
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
