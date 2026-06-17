@@ -199,17 +199,20 @@ jobs:
           mkdir -p $GITHUB_WORKSPACE/patched_files
           
           echo "[+] Gathering modified files..."
-          # Use git to find all files modified by your patch scripts
           git status -s | grep -E '^( M|M |A |A|AM|MM|\?\?)' | awk '{print $2}' | while read file; do
             if [ -f "$file" ]; then
               mkdir -p "$GITHUB_WORKSPACE/patched_files/$(dirname "$file")"
               cp "$file" "$GITHUB_WORKSPACE/patched_files/$file"
             fi
           done
+          
           echo "[+] Gathering KernelSU directory..."
           if [ -d "drivers/kernelsu" ]; then
-            cp -r drivers/kernelsu $GITHUB_WORKSPACE/patched_files/drivers/
+            mkdir -p $GITHUB_WORKSPACE/patched_files/drivers
+            # Use -rL to copy the actual files instead of the symlink shortcut!
+            cp -rL drivers/kernelsu $GITHUB_WORKSPACE/patched_files/drivers/
           fi
+          
           echo "[+] Gathering reject files (if any)..."
           find . -name "*.rej" -exec cp --parents {} $GITHUB_WORKSPACE/patched_files/ \; || true
           
