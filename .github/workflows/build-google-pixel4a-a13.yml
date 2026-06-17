@@ -253,8 +253,8 @@ jobs:
            
            # Also patch fs/locks.c to use the compatibility wrapper
            echo "[+] Patching fs/locks.c for compatibility..."
-           sed -i 's/return filp->f_op->lock(filp, cmd, fl);/return filp->f_op->lock(filp, fl);/g' fs/locks.c || true
-           
+           sed -i 's/return filp->f_op->lock(filp, cmd, fl);/return filp->f_op->lock(filp, cmd, fl);/g' fs/locks.c || true
+
            echo "[+] Injecting sched headers for tasklist_lock and init_task..."
            
            if [ -f "drivers/kernelsu/supercall/dispatch.c" ]; then
