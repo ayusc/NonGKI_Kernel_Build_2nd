@@ -41,7 +41,7 @@ env:
   KERNELSU_AUTO_GET : "true" # if u want easy setting kernelsu, u can true.
   KERNELSU_AUTO_FORK : "next" # xxksu, rsuntk, next, resukisu and sukisu
 
-  SUSFS_ENABLE : "true"
+  SUSFS_ENABLE : "false"
   SUSFS_FIXED : "true"
 
   AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
@@ -225,29 +225,6 @@ jobs:
         with:
           name: Patched-Files-Review
           path: ${{ github.workspace }}/patched_files_review.zip
-          
-      - name: 🩹 Globally Fix VFS Locks for 4.14
-        run: |
-          cd $GITHUB_WORKSPACE/device_kernel
-          echo "[+] Injecting backward compatibility into the kernel's global fs.h..."
-          
-          # Append the compatibility macros to the very bottom of the kernel's core file system header
-          cat << 'EOF' >> include/linux/fs.h
-
-          /* KERNELSU / SUSFS VFS LOCK BACKWARD COMPATIBILITY LAYER */
-          #include <linux/version.h>
-          #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
-          #ifndef vfs_test_lock
-          #define vfs_test_lock(filp, fl) (posix_test_lock(filp, fl), 0)
-          #endif
-          #ifndef vfs_lock_file
-          #define vfs_lock_file(filp, cmd, fl, conf) posix_lock_file(filp, fl, conf)
-          #endif
-          #endif
-          EOF
-          
-          echo "[+] Successfully globally patched include/linux/fs.h!"
-        shell: bash
         
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
