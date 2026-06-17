@@ -226,19 +226,23 @@ jobs:
           name: Patched-Files-Review
           path: ${{ github.workspace }}/patched_files_review.zip
           
-      - name: 🩹 Fix KernelSU VFS Lock Compatibility for 4.14
+      - name: 🩹 Dynamically Fix KernelSU VFS Locks for 4.14
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          echo "[+] Injecting VFS lock backward compatibility into ksu.h..."
+          echo "[+] Hunting down culprit files using vfs_lock_file..."
           
-          # Find the real ksu.h file directly, bypassing symlinks
-          KSU_HEADER=$(find . -type f -path "*/kernel/ksu.h" | head -n 1)
+          # Search directly inside the cloned KernelSU directories (ignoring symlinks)
+          TARGET_FILES=$(grep -rl "vfs_lock_file" KernelSU* || true)
           
-          if [ -n "$KSU_HEADER" ]; then
-            sed -i '1i #include <linux/version.h>\n#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)\n#define vfs_test_lock posix_test_lock\n#define vfs_lock_file posix_lock_file\n#endif\n' "$KSU_HEADER"
-            echo "[+] Patch successfully applied to $KSU_HEADER"
+          if [ -n "$TARGET_FILES" ]; then
+            for file in $TARGET_FILES; do
+              echo "[+] Found culprit: $file"
+              # Inject smart C-macros at the very top of the culprit file
+              sed -i '1i #include <linux/fs.h>\n#include <linux/version.h>\n#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)\n#define vfs_test_lock(filp, fl) (posix_test_lock(filp, fl), 0)\n#define vfs_lock_file(filp, cmd, fl, conf) posix_lock_file(filp, fl, conf)\n#endif\n' "$file"
+              echo "[+] Successfully patched $file"
+            done
           else
-            echo "[-] ksu.h not found! Something is wrong."
+            echo "[-] No files containing vfs_lock_file were found."
           fi
         shell: bash
         
