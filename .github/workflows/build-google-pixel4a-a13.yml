@@ -206,7 +206,10 @@ jobs:
               cp "$file" "$GITHUB_WORKSPACE/patched_files/$file"
             fi
           done
-          
+          echo "[+] Gathering KernelSU directory..."
+          if [ -d "drivers/kernelsu" ]; then
+            cp -r drivers/kernelsu $GITHUB_WORKSPACE/patched_files/drivers/
+          fi
           echo "[+] Gathering reject files (if any)..."
           find . -name "*.rej" -exec cp --parents {} $GITHUB_WORKSPACE/patched_files/ \; || true
           
