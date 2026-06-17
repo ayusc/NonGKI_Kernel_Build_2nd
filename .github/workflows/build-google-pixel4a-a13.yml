@@ -231,11 +231,14 @@ jobs:
           cd $GITHUB_WORKSPACE/device_kernel
           echo "[+] Injecting VFS lock backward compatibility into ksu.h..."
           
-          if [ -f "drivers/kernelsu/ksu.h" ]; then
-            sed -i '1i #define vfs_test_lock posix_test_lock\n#define vfs_lock_file posix_lock_file\n' drivers/kernelsu/ksu.h
-            echo "[+] Patch successfully applied to ksu.h"
+          # Find the real ksu.h file directly, bypassing symlinks
+          KSU_HEADER=$(find . -type f -path "*/kernel/ksu.h" | head -n 1)
+          
+          if [ -n "$KSU_HEADER" ]; then
+            sed -i '1i #include <linux/version.h>\n#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)\n#define vfs_test_lock posix_test_lock\n#define vfs_lock_file posix_lock_file\n#endif\n' "$KSU_HEADER"
+            echo "[+] Patch successfully applied to $KSU_HEADER"
           else
-            echo "[-] ksu.h not found!"
+            echo "[-] ksu.h not found! Something is wrong."
           fi
         shell: bash
         
