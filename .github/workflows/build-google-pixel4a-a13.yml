@@ -226,24 +226,27 @@ jobs:
           name: Patched-Files-Review
           path: ${{ github.workspace }}/patched_files_review.zip
           
-      - name: 🩹 Dynamically Fix KernelSU VFS Locks for 4.14
+      - name: 🩹 Globally Fix VFS Locks for 4.14
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-          echo "[+] Hunting down culprit files using vfs_lock_file..."
+          echo "[+] Injecting backward compatibility into the kernel's global fs.h..."
           
-          # Search directly inside the cloned KernelSU directories (ignoring symlinks)
-          TARGET_FILES=$(grep -rl "vfs_lock_file" KernelSU* || true)
+          # Append the compatibility macros to the very bottom of the kernel's core file system header
+          cat << 'EOF' >> include/linux/fs.h
+
+          /* KERNELSU / SUSFS VFS LOCK BACKWARD COMPATIBILITY LAYER */
+          #include <linux/version.h>
+          #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
+          #ifndef vfs_test_lock
+          #define vfs_test_lock(filp, fl) (posix_test_lock(filp, fl), 0)
+          #endif
+          #ifndef vfs_lock_file
+          #define vfs_lock_file(filp, cmd, fl, conf) posix_lock_file(filp, fl, conf)
+          #endif
+          #endif
+          EOF
           
-          if [ -n "$TARGET_FILES" ]; then
-            for file in $TARGET_FILES; do
-              echo "[+] Found culprit: $file"
-              # Inject smart C-macros at the very top of the culprit file
-              sed -i '1i #include <linux/fs.h>\n#include <linux/version.h>\n#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)\n#define vfs_test_lock(filp, fl) (posix_test_lock(filp, fl), 0)\n#define vfs_lock_file(filp, cmd, fl, conf) posix_lock_file(filp, fl, conf)\n#endif\n' "$file"
-              echo "[+] Successfully patched $file"
-            done
-          else
-            echo "[-] No files containing vfs_lock_file were found."
-          fi
+          echo "[+] Successfully globally patched include/linux/fs.h!"
         shell: bash
         
       - name: 🚀 Build Process
