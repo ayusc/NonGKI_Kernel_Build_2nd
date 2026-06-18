@@ -195,6 +195,7 @@ jobs:
           
       - name: Apply KSUN Fix
         run: |
+          cd $GITHUB_WORKSPACE/device_kernel
           curl -L https://raw.githubusercontent.com/ayusc/NonGKI_Kernel_Patches/pixel_kernel/pixel_4_series_official/ksun_fix.patch -o /tmp/ksun_fix.patch
           patch -d drivers/kernelsu -p2 < /tmp/ksun_fix.patch
                 
