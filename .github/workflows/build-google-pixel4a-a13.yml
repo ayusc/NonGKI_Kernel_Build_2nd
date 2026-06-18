@@ -225,43 +225,6 @@ jobs:
         with:
           name: Patched-Files-Review
           path: ${{ github.workspace }}/patched_files_review.zip
-          
-      - name: 🩹 Globally Fix VFS Locks for 4.14
-        run: |
-           cd $GITHUB_WORKSPACE/device_kernel
-           echo "[+] Injecting backward compatibility into the kernel's global fs.h..."
-           
-           cat << 'EOF' >> include/linux/fs.h
-
-           /* KERNELSU / SUSFS VFS LOCK BACKWARD COMPATIBILITY LAYER */
-           #include <linux/version.h>
-           #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
-           #ifndef vfs_test_lock
-           #define vfs_test_lock(filp, fl) (posix_test_lock(filp, fl), 0)
-           #endif
-           #ifndef vfs_lock_file
-           #define vfs_lock_file(filp, cmd, fl, conf) posix_lock_file(filp, fl, conf)
-           #endif
-           /* Fix for direct f_op->lock calls */
-           #ifndef flock_lock_file_wait
-           #define flock_lock_file_wait(filp, fl) posix_lock_file(filp, fl, NULL)
-           #endif
-           #endif
-           EOF
-           
-           echo "[+] Successfully globally patched include/linux/fs.h!"
-           
-           # Also patch fs/locks.c to use the compatibility wrapper
-           echo "[+] Patching fs/locks.c for compatibility..."
-           sed -i 's/return filp->f_op->lock(filp, cmd, fl);/return filp->f_op->lock(filp, cmd, fl);/g' fs/locks.c || true
-
-           echo "[+] Injecting sched headers for tasklist_lock and init_task..."
-           
-           if [ -f "drivers/kernelsu/supercall/dispatch.c" ]; then
-             sed -i '1i #include <linux/sched/signal.h>\nextern rwlock_t tasklist_lock;\nextern struct task_struct init_task;\n' drivers/kernelsu/supercall/dispatch.c
-             echo "[+] Successfully patched dispatch.c"
-           fi
-        shell: bash
         
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
