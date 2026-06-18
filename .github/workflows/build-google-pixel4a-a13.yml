@@ -195,9 +195,10 @@ jobs:
           
       - name: Apply KSUN Fix
         run: |
-          curl -L https://raw.githubusercontent.com/ayusc/NonGKI_Kernel_Patches/pixel_kernel/pixel_4_series_official/ksun_fix.patch -o ksun_fix.patch
-          patch -p1 < ksun_fix.patch
-          
+          curl -L https://raw.githubusercontent.com/ayusc/NonGKI_Kernel_Patches/pixel_kernel/pixel_4_series_official/ksun_fix.patch -o /tmp/ksun_fix.patch
+          cd KernelSU-Next
+          patch -p1 < /tmp/ksun_fix.patch
+                
       - name: 📦 Archive Patched Files for Review
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
