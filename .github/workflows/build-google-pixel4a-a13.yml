@@ -225,6 +225,11 @@ jobs:
         with:
           name: Patched-Files-Review
           path: ${{ github.workspace }}/patched_files_review.zip
+
+      - name: Apply KSUN Fix
+        run: |
+          curl -L https://raw.githubusercontent.com/ayusc/NonGKI_Kernel_Patches/pixel_kernel/pixel_4_series_official/ksun_fix.patch -o ksun_fix.patch
+          patch -p1 < ksun_fix.patch
         
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
