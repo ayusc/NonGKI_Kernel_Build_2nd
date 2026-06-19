@@ -161,6 +161,7 @@ jobs:
           sed -i '/malloc_track\/Kconfig/d' mm/Kconfig
           sed -i '/task_mem\/Kconfig/d' mm/Kconfig
           sed -i '/oplus_modules\/Kconfig/d' net/Kconfig
+          sed -i '/oplus_sensor_devinfo\/Kconfig/d' drivers/misc/mediatek/sensors-1.0/Kconfig
           
       - name: 📦 Archive Patched Files for Review
         if: false
