@@ -152,7 +152,7 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile       
 
           echo "[+] Fix some bugs"
-          touch kernel/sched_assist/Kconfig
+          sed -i '/sched_assist\/Kconfig/d' init/Kconfig
           
       - name: 📦 Archive Patched Files for Review
         if: always()
