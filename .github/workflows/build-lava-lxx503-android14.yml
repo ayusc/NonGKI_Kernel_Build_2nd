@@ -39,7 +39,7 @@ env:
   KERNELSU_SOURCE : ""
   KERNELSU_BRANCH : ""
 
-  KERNELSU_AUTO_GET : "false" 
+  KERNELSU_AUTO_GET : "true" 
   KERNELSU_AUTO_FORK : "next" 
 
   SUSFS_ENABLE : "true"
@@ -61,7 +61,7 @@ env:
   PACK_METHOD: "Anykernel3" 
   PACK_KMODULES: "false" 
 
-  KERNELSU_METHOD: "manual" 
+  KERNELSU_METHOD: "shell" 
 
   PATCHES_SOURCE: "ayusc/NonGKI_Kernel_Patches" 
   PATCHES_BRANCH: "main" 
