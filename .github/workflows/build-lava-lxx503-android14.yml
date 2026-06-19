@@ -1,4 +1,4 @@
-name: Build Lava Blaze 5G (Aandroid 14)
+name: Build Lava Blaze 5G (Android 14)
 
 on:
   workflow_call:
@@ -163,6 +163,7 @@ jobs:
           sed -i '/oplus_modules\/Kconfig/d' net/Kconfig
           sed -i '/oplus_sensor_devinfo\/Kconfig/d' drivers/misc/mediatek/sensors-1.0/Kconfig
           sed -i '/oplus_virtual_sensor\/Kconfig/d' drivers/misc/mediatek/sensors-1.0/Kconfig
+          sed -i '/oplus/d' drivers/misc/mediatek/sensors-1.0/Kconfig
           
       - name: 📦 Archive Patched Files for Review
         if: false
