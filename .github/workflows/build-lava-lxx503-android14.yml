@@ -145,6 +145,12 @@ jobs:
           sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
           echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
           
+          # Patch Makefile to suppress unknown warnings and GNU layout structures
+          echo "[+] Patching Makefile"
+          echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
+          echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
+          echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile         
+          
       - name: 📦 Archive Patched Files for Review
         if: always()
         run: |
