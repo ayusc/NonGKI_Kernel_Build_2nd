@@ -163,6 +163,7 @@ jobs:
           sed -i '/oplus_modules\/Kconfig/d' net/Kconfig
           sed -i '/oplus/d' drivers/misc/mediatek/sensors-1.0/Kconfig
           sed -i '/oplus/d' drivers/misc/mediatek/sensor/2.0/Kconfig
+          dsed -i '/oplus/d' drivers/input/touchscreen/Kconfig
           
       - name: 📦 Archive Patched Files for Review
         if: false
