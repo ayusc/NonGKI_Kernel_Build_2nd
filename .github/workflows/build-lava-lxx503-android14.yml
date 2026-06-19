@@ -156,6 +156,7 @@ jobs:
           sed -i '/klockopt\/Kconfig/d' init/Kconfig
           sed -i '/rootguard\/Kconfig/d' arch/arm64/Kconfig
           sed -i '/uxio_first\/Kconfig/d' block/Kconfig
+          sed -i '/healthinfo\/Kconfig/d' mm/Kconfig
           
       - name: 📦 Archive Patched Files for Review
         if: false
