@@ -186,6 +186,10 @@ jobs:
           sed -i '/multi_freearea\.h/d' mm/page_alloc.c
           
           sed -i '/healthinfo\/ion\.h/d' fs/proc/meminfo.c
+
+          sed -i '/process_mm_reclaim\.h/d' mm/vmscan.c
+          
+          sed -i '/sched_assist_common\.h/d' kernel/locking/rwsem-xadd.c
           
       - name: 📦 Archive Patched Files for Review
         if: false
