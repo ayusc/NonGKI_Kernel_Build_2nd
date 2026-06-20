@@ -151,13 +151,16 @@ jobs:
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
-          echo "[+] Fix some bugs"
+          echo "[+] Fix some bugs"          
           # 1. Fix the mm/built-in.a error by stripping the ghost multi_freearea object from the Makefile
           sed -i '/multi_freearea/d' mm/Makefile
           
-          # 2. Fix all 4 compiler errors inside kernel/sched/fair.c at once using a master header injection
-          sed -i '1s/^/#define SA_TYPE_ONCE_UX 0\n#define SA_TYPE_TURBO 0\n#define last_wake_ts last_sleep_ts\nstruct ux_sched_cls { struct cpumask cpus; };\nstruct ux_sched_cputopo { struct ux_sched_cls sched_cls[16]; };\n#ifndef BIG_CORE\n#define BIG_CORE 0\n#endif\n/' kernel/sched/fair.c
-                              
+          # 2. Fix the sched/fair.c errors (Includes cpumask header, removes BIG_CORE conflict)
+          sed -i '1s/^/#include <linux\/cpumask.h>\n#define SA_TYPE_ONCE_UX 0\n#define SA_TYPE_TURBO 0\n#define last_wake_ts last_sleep_ts\nstruct ux_sched_cls { struct cpumask cpus; };\nstruct ux_sched_cputopo { struct ux_sched_cls sched_cls[16]; };\n/' kernel/sched/fair.c
+          
+          # 3. Remove the missing Oplus memory reclaim header from the async slab shrinker
+          sed -i '/process_mm_reclaim\.h/d' mm/async_shrink_slabd.c
+
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
