@@ -171,6 +171,16 @@ jobs:
           find . -type f -name "Kconfig*" -exec sed -i '/cpu_jankinfo\/Kconfig/d' {} +
           find . -type f -name "Kconfig*" -exec sed -i '/fs\/proc\/healthinfo\/Kconfig/d' {} +
           find . -type f -name "Kconfig*" -exec sed -i '/task_cpustats\/Kconfig/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/sched_assist/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/healthinfo/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/klockopt/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/uxio_first/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/malloc_track/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/task_mem/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/oplus_modules/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/uff_fp_drivers/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/cpu_jankinfo/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/task_cpustats/d' {} +
             
                    
       - name: 📦 Archive Patched Files for Review
