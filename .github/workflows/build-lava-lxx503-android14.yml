@@ -204,6 +204,17 @@ jobs:
           sed -i '/oplus_project\.h/d' drivers/misc/mediatek/imgsensor/src/common/v1_1/imgsensor_hw.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/imgsensor/src/common/v1_1/imgsensor_hw.c
 
+          # 38. Fix missing atomic type definition header in the ION driver stub
+          sed -i '1s/^/#include <linux\/atomic.h>\n/' drivers/staging/android/mtk_ion/ion.c
+          
+          # 39. Fix project header and stubs for image sensor EEPROM driver
+          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/imgsensor/src/OplusImgsensor/imgsensor_eeprom.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/imgsensor/src/OplusImgsensor/imgsensor_eeprom.c
+          
+          # 40. Fix project header and stubs for lens BU64253AF focus driver
+          sed -i '/oppo_project\.h/d' drivers/misc/mediatek/lens/mtk/main/common/bu64253af/BU64253AF.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/lens/mtk/main/common/bu64253af/BU64253AF.c
+          
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
