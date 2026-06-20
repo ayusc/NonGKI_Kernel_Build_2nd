@@ -152,6 +152,8 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           
           echo "[+] Fix some bugs"          
+          # 46. Stub out project identity checks in mtk_nanohub to prevent undeclared identifier errors
+          sed -i '1s/^/#define is_project(...) 0\n#define is_support_new_arch_func(...) 0\n/' drivers/misc/mediatek/sensor/2.0/mtk_nanohub/mtk_nanohub.c
           
       - name: 📦 Archive Patched Files for Review
         if: false
