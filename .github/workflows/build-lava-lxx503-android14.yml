@@ -168,7 +168,9 @@ jobs:
           find . -type f -name "Kconfig*" -exec sed -i '/oplus/d' {} +
           find . -type f -name "Kconfig*" -exec sed -i '/uff_fp_drivers\/Kconfig/d' {} +
           find . -type f -name "Kconfig*" -exec sed -i '/sound\/soc\/codecs\/audio\/Kconfig/d' {} +
-          
+          find . -type f -name "Kconfig*" -exec sed -i '/cpu_jankinfo\/Kconfig/d' {} +
+
+                   
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
