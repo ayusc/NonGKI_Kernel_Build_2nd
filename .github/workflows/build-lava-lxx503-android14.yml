@@ -159,6 +159,9 @@ jobs:
           # 26. Fix project header and stubs for MediaTek flashlight core driver
           sed -i '/oppo_project\.h/d' drivers/misc/mediatek/flashlight/flashlight-core.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/flashlight/flashlight-core.c
+          # 28. Fix project header and stubs for Oplus flashlight custom header
+          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/flashlight/oplus/flashlight_custom.h
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/flashlight/oplus/flashlight_custom.h
 
       - name: 📦 Archive Patched Files for Review
         if: false
