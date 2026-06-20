@@ -220,6 +220,10 @@ jobs:
           
           # 42. Remove missing Oplus charging tracking header from MT6360 PMU driver
           sed -i '/oplus_chg_track\.h/d' drivers/misc/mediatek/pmic/mt6360/v1/pmu/mt6360_pmu_irq.c
+
+          # 43. Remove missing Oplus charging tracking header from MT6360 PMU charger driver
+          sed -i '/oplus_chg_track\.h/d' drivers/misc/mediatek/pmic/mt6360/v1/pmu/mt6360_pmu_chg.c
+
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
