@@ -193,6 +193,12 @@ jobs:
           # 20. Fix display kernel event header and stubs for MediaTek DRM CRTC driver
           sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_drm_crtc.c
           sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_drm_crtc.c
+          # 21. Fix display kernel event header and stubs for MediaTek DRM DDP driver
+          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_drm_ddp.c
+          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_drm_ddp.c
+          
+          # 22. Remove missing healthinfo header from memory display library
+          sed -i '/healthinfo\/ion\.h/d' lib/show_mem.c
 
       - name: 📦 Archive Patched Files for Review
         if: false
