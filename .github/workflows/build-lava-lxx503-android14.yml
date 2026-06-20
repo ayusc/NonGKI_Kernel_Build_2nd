@@ -190,6 +190,14 @@ jobs:
           # 33. Bypass Oplus battery gauge hooks entirely to restore standard MediaTek battery driver
           sed -i '1s/^/#undef OPLUS_FEATURE_CHG_BASIC\n/' drivers/power/supply/mediatek/battery/mtk_battery.c
 
+          # 34. Fix display kernel event header and stubs for MediaTek CMDQ helper
+          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/soc/mediatek/mtk-cmdq-helper.c
+          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/soc/mediatek/mtk-cmdq-helper.c
+          
+          # 35. Fix project header and stubs for Oplus custom image sensor config
+          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/imgsensor/src/OplusImgsensor/imgsensor_hwcfg_custom.h
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/imgsensor/src/OplusImgsensor/imgsensor_hwcfg_custom.h
+
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
