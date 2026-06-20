@@ -152,60 +152,13 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
           echo "[+] Fix some bugs"          
-          # 9. Remove missing scheduler header from the CPU management core
-          sed -i '/sched_assist_common\.h/d' kernel/cpu.c
+          # 25. Fix project header and stubs for MediaTek pinctrl-paris driver
+          sed -i '/oplus_project\.h/d' drivers/pinctrl/mediatek/pinctrl-paris.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/pinctrl/mediatek/pinctrl-paris.c
           
-          # 10. Remove missing smart amp audio codec interface header
-          sed -i '/sia81xx_aux_dev_if\.h/d' sound/soc/mediatek/mt6833/mt6833-mt6359.c
-          
-          # 11. Remove display kernel event header and neutralize its logging macros/functions
-          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_disp_ovl.c
-          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_disp_ovl.c
-          
-          # 12. Remove project header from keypad driver and stub out the engineering mode version flags
-          sed -i '/oplus_project\.h/d' drivers/input/keyboard/mediatek/kpd.c
-          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/input/keyboard/mediatek/kpd.c
-
-          # 13. Remove the missing Oppo process header from the process exit handling core
-          sed -i '/oppo_process\.h/d' kernel/exit.c
-          
-          # 14. Remove the missing Oppo process header from the signal handling core
-          sed -i '/oppo_process\.h/d' kernel/signal.c
-
-          # 15. Remove missing scheduler header from the signal core
-          sed -i '/sched_assist_common\.h/d' kernel/signal.c
-          
-          # 16. Fix display kernel event header and stubs for MediaTek DRM RDMA driver
-          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_disp_rdma.c
-          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_disp_rdma.c
-          
-          # 17. Fix display kernel event header and stubs for MediaTek Command Queue Mailbox driver
-          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/misc/mediatek/cmdq/mailbox/cmdq-sec-mailbox.c
-          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/misc/mediatek/cmdq/mailbox/cmdq-sec-mailbox.c
-          
-          # 18. Fix project header and stubs for MediaTek Wi-Fi RLM domain engine
-          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/connectivity/wlan/core/gen4m/mgmt/rlm_domain.c
-          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/connectivity/wlan/core/gen4m/mgmt/rlm_domain.c
-          # 19. Bypass Oplus scheduler hooks in the workqueue core completely
-          sed -i '/sched_assist_common\.h/d' kernel/workqueue.c
-          sed -i '1s/^/#undef OPLUS_FEATURE_SCHED_ASSIST\n/' kernel/workqueue.c
-          
-          # 20. Fix display kernel event header and stubs for MediaTek DRM CRTC driver
-          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_drm_crtc.c
-          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_drm_crtc.c
-          # 21. Fix display kernel event header and stubs for MediaTek DRM DDP driver
-          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_drm_ddp.c
-          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_drm_ddp.c
-          
-          # 22. Remove missing healthinfo header from memory display library
-          sed -i '/healthinfo\/ion\.h/d' lib/show_mem.c
-          # 23. Fix display kernel event header and stubs for MediaTek DRM Framebuffer driver
-          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_drm_fb.c
-          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_drm_fb.c
-
-          # 24. Fix display kernel event header and stubs for MediaTek DRM DSI driver
-          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_dsi.c
-          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_dsi.c
+          # 26. Fix project header and stubs for MediaTek flashlight core driver
+          sed -i '/oppo_project\.h/d' drivers/misc/mediatek/flashlight/flashlight-core.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/flashlight/flashlight-core.c
 
       - name: 📦 Archive Patched Files for Review
         if: false
