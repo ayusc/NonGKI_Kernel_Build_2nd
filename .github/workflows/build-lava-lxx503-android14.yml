@@ -152,7 +152,7 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
           echo "[+] Fix some bugs"
-          
+          find . -type f \( -name "Makefile*" -o -name "Kbuild*" -o -name "*.mk" \) -exec sed -i 's|[^ ]*bf2253L_mipi_raw[/]*||g' {} +
   
       - name: 📦 Archive Patched Files for Review
         if: false
