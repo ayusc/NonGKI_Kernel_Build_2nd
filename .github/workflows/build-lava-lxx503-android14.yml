@@ -140,7 +140,7 @@ jobs:
       - name: 🪛 Extra Kernel Options
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
-
+      
           echo "[+] Disabling LTO"
           sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
           echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
@@ -150,26 +150,31 @@ jobs:
           echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
-
+      
           echo "[+] Fix some bugs"          
-          # 25. Fix project header and stubs for MediaTek pinctrl-paris driver
+          
+          # Battery driver - remove both oplus headers
+          sed -i '/oplus_gauge\.h/d' drivers/power/supply/mediatek/battery/mtk_battery.c
+          sed -i '/oplus_project\.h/d' drivers/power/supply/mediatek/battery/mtk_battery.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/power/supply/mediatek/battery/mtk_battery.c
+          
+          # Imgsensor GPIO driver
+          sed -i '/<soc\/oplus\/system\/oplus_project\.h>/d' drivers/misc/mediatek/imgsensor/src/mt6853/camera_hw_mt6833/../../common/v1_1/camera_hw/gpio/gpio.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/imgsensor/src/mt6853/camera_hw_mt6833/../../common/v1_1/camera_hw/gpio/gpio.c
+          
+          # Original patches
           sed -i '/oplus_project\.h/d' drivers/pinctrl/mediatek/pinctrl-paris.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/pinctrl/mediatek/pinctrl-paris.c
           
-          # 26. Fix project header and stubs for MediaTek flashlight core driver
           sed -i '/oppo_project\.h/d' drivers/misc/mediatek/flashlight/flashlight-core.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/flashlight/flashlight-core.c
-          # 28. Fix project header and stubs for Oplus flashlight custom header
+          
           sed -i '/oplus_project\.h/d' drivers/misc/mediatek/flashlight/oplus/flashlight_custom.h
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/flashlight/oplus/flashlight_custom.h
-          # 29. Fix project header and stubs for MediaTek flashlights-mt6360 driver
+          
           sed -i '/oplus_project\.h/d' drivers/misc/mediatek/flashlight/flashlights-mt6360.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/flashlight/flashlights-mt6360.c
-          
-          # 30. Fix project header and stubs for MediaTek battery core driver
-          sed -i '/oplus_project\.h/d' drivers/power/supply/mediatek/battery/mtk_battery.c
-          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/power/supply/mediatek/battery/mtk_battery.c
-
+      
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
