@@ -1,4 +1,4 @@
-name: Build Lava Blaze 5G (Android 14)
+ Xname: Build Lava Blaze 5G (Android 14)
 
 on:
   workflow_call:
@@ -319,6 +319,11 @@ jobs:
           if ! grep -q "oplus_performance_stubs.o" kernel/Makefile; then
               echo "obj-y += oplus_performance_stubs.o" >> kernel/Makefile
           fi
+          # 56. Fix double export of audio codec symbols to prevent modpost fatal warnings
+          sed -i '/EXPORT_SYMBOL(accdet_read_audio_res);/d' sound/soc/codecs/mt6357-accdet.c
+          sed -i '/EXPORT_SYMBOL(accdet_late_init);/d' sound/soc/codecs/mt6357-accdet.c
+          sed -i '/EXPORT_SYMBOL(accdet_read_audio_res);/d' sound/soc/codecs/mt6359-accdet.c
+          sed -i '/EXPORT_SYMBOL(accdet_late_init);/d' sound/soc/codecs/mt6359-accdet.c
 
       - name: 📦 Archive Patched Files for Review
         if: false
