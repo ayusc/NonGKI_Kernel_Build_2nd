@@ -203,6 +203,10 @@ jobs:
           sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_drm_fb.c
           sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_drm_fb.c
 
+          # 24. Fix display kernel event header and stubs for MediaTek DRM DSI driver
+          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_dsi.c
+          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_dsi.c
+
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
