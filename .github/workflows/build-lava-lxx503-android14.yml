@@ -153,8 +153,12 @@ jobs:
 
           echo "[+] Fix some bugs"
 
+          echo "[+] Injecting Dummy Phoenix tracking parameters to clear init/main.c compilation"
+          sed -i '1s/^/#define KERNEL_MM_INIT_DONE 0\n#define KERNEL_LOCAL_IRQ_ENABLE 0\n#define KERNEL_DELAYACCT_INIT_DONE 0\n#define KERNEL_DRIVER_INIT_DONE 0\n#define KERNEL_DO_INITCALLS_DONE 0\n#define KERNEL_INIT_DONE 0\n#define KERNEL_DO_BASIC_SETUP_DONE 0\nstatic void (*phx_set_boot_stage)(int stage) = NULL;\n/' init/main.c
+
+          # === THE ABSOLUTE CAMERA SYSTEM FIX ===
+          echo "[+] Dynamic Camera Driver Auto-Stubber"
           SENSOR_LIST=$(grep 'CONFIG_CUSTOM_KERNEL_IMGSENSOR=' arch/arm64/configs/$DEFCONFIG_NAME | sed 's/CONFIG_CUSTOM_KERNEL_IMGSENSOR=//' | tr -d '"')
-          
           for sensor in $SENSOR_LIST; do
               TARGET_DIR="drivers/misc/mediatek/imgsensor/src/common/v1_1/$sensor"
               if [ ! -f "$TARGET_DIR/Makefile" ]; then
@@ -164,9 +168,10 @@ jobs:
               fi
           done
 
-          echo "[+] Sterilizing core kernel boot components (init/main.c)"
-          sed -i '/oplus_phoenix/d' init/main.c
-          sed -i '/sched_assist/d' init/main.c
+          # === SENSOR 2.0 ARCHITECTURE PURGE ===
+          echo "[+] Purging leftover MediaTek sensor 2.0 uncleaned module references"
+          find . -type f -name "Makefile*" -exec sed -i '/oplus_sensor_devinfo/d' {} +
+          find . -type f -name "Makefile*" -exec sed -i '/oplus_virtual_sensor/d' {} +
           
       - name: 📦 Archive Patched Files for Review
         if: false
