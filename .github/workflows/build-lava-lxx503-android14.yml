@@ -173,6 +173,11 @@ jobs:
           
           # 2. Remove the missing Oplus fork scheduler header from the process cloning engine
           sed -i '/sched_assist_fork\.h/d' kernel/fork.c
+          # 1. Remove the missing Phoenix header from the panic handler
+          sed -i '/oplus_phoenix\.h/d' kernel/panic.c
+          
+          # 2. Inject the dummy function pointer to keep any tracking calls from crashing the compiler
+          sed -i '1s/^/static void (*phx_set_boot_stage)(int stage);\n/' kernel/panic.c
 
       - name: 📦 Archive Patched Files for Review
         if: false
