@@ -165,6 +165,9 @@ jobs:
           # 49. Fix project header, stubs, and get_eng_version mapping for mtk_cooler_sysrst driver
           sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/common/coolers/mtk_cooler_sysrst.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/common/coolers/mtk_cooler_sysrst.c
+          # 50. Fix project header, stubs, and get_eng_version mapping for mtk_cooler_kshutdown driver
+          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/mtk_cooler_kshutdown.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/mtk_cooler_kshutdown.c
           
 
       - name: 📦 Archive Patched Files for Review
