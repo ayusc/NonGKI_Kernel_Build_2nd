@@ -152,8 +152,17 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
           echo "[+] Fix some bugs"
-          find . -type f \( -name "Makefile*" -o -name "Kbuild*" -o -name "*.mk" \) -exec sed -i -E 's|[^ ]*bf2253L_mipi_raw[^ ]*||g' {} +
- 
+          find drivers/misc/mediatek/imgsensor/ -type f \( -name "Makefile*" -o -name "Kbuild*" \) -exec sed -i 's|[^ ]*bf2253L_mipi_raw/||g' {} +
+
+          # === NEW IMPLEMENTATIONS ADDED HERE ===
+          echo "[+] Force-evaporating leftover empty camera folder shells"
+          find . -type d -name "*bf2253L_mipi_raw*" -exec rm -rf {} +
+
+          echo "[+] Sterilizing core kernel boot components (init/main.c)"
+          # Deletes header calls and function hooks for oplus_phoenix and sched_assist inside kernel initialization
+          sed -i '/oplus_phoenix/d' init/main.c
+          sed -i '/sched_assist/d' init/main.c
+          
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
