@@ -177,7 +177,14 @@ jobs:
           # 53. Fix project header, stubs, and get_eng_version mapping for mtk_ts_pmic thermal driver
           sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_pmic.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_pmic.c
-          
+          # 54. Proactive sweep loop to catch and fix all remaining thermal driver ghost headers
+          echo "[+] Proactively sweeping thermal folder for ghost headers..."
+          for file in $(find drivers/misc/mediatek/thermal/ -type f \( -name "*.c" -o -name "*.h" \) -exec grep -lE "oplus_project\.h|oppo_project\.h" {} +); do
+              echo "  -> Patching: $file"
+              sed -i '/oplus_project\.h/d' "$file"
+              sed -i '/oppo_project\.h/d' "$file"
+              sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' "$file"
+          done          
 
       - name: 📦 Archive Patched Files for Review
         if: false
