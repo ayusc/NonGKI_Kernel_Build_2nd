@@ -164,6 +164,9 @@ jobs:
           # Remove the missing Oplus scheduler header from the CPU priority tracker
           sed -i '/sched_assist_common\.h/d' kernel/sched/cpupri.c
 
+          # Remove the missing Oplus project header from the kernel tracer
+          sed -i '/oplus_project\.h/d' kernel/trace/trace.c
+
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
