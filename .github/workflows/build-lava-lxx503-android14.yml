@@ -172,6 +172,12 @@ jobs:
           echo "[+] Purging leftover MediaTek sensor 2.0 uncleaned module references"
           find . -type f -name "Makefile*" -exec sed -i '/oplus_sensor_devinfo/d' {} +
           find . -type f -name "Makefile*" -exec sed -i '/oplus_virtual_sensor/d' {} +
+
+          # 1. Fix the C-compiler crash by removing '= NULL' (static variables default to 0 automatically in C)
+          sed -i 's/= NULL//g' init/main.c
+
+          # 2. The Global OEM Nuke: Eradicate ALL remaining Oplus build instructions across the entire tree
+          find . -type f \( -name "Makefile*" -o -name "Kconfig*" -o -name "Kbuild*" \) -exec sed -i -e '/oplus/d' -e '/OPLUS/d' {} +
           
       - name: 📦 Archive Patched Files for Review
         if: false
