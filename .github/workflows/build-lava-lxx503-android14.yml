@@ -166,23 +166,8 @@ jobs:
           sed -i '/oplus/d' drivers/input/Kconfig
           sed -i '/oplus/d' drivers/input/touchscreen/Kconfig
           find . -type f -name "Kconfig*" -exec sed -i '/oplus/d' {} +
-          find . -type f -name "Kconfig*" | while read -r kfile; do
-              # Extract path whether it has quotes or not
-              awk '/^[ \t]*source[ \t]+/ { gsub(/"/, "", $2); print $2 }' "$kfile" | while read -r missing_file; do
-                  # Ignore variables and check if the file is genuinely missing
-                  if [[ -n "$missing_file" ]] && [[ "$missing_file" != *\$* ]]; then
-                      if [ ! -f "$missing_file" ]; then
-                          echo "[-] OEM dropped $missing_file. Creating dummy files..."
-                          # Create the missing directory
-                          mkdir -p "$(dirname "$missing_file")"
-                          # Create the blank Kconfig
-                          touch "$missing_file"
-                          # Create a blank Makefile to prevent future build crashes
-                          touch "$(dirname "$missing_file")/Makefile"
-                      fi
-                  fi
-              done
-          done
+          find . -type f -name "Kconfig*" -exec sed -i '/uff_fp_drivers\/Kconfig/d' {} +
+
           
       - name: 📦 Archive Patched Files for Review
         if: false
