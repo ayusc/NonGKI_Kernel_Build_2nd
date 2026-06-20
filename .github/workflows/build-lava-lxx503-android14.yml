@@ -214,7 +214,12 @@ jobs:
           # 40. Fix project header and stubs for lens BU64253AF focus driver
           sed -i '/oppo_project\.h/d' drivers/misc/mediatek/lens/mtk/main/common/bu64253af/BU64253AF.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/lens/mtk/main/common/bu64253af/BU64253AF.c
+          # 41. Fix project header and stubs for MediaTek 8250 serial driver
+          sed -i '/oplus_project\.h/d' drivers/tty/serial/8250/8250_mtk.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/tty/serial/8250/8250_mtk.c
           
+          # 42. Remove missing Oplus charging tracking header from MT6360 PMU driver
+          sed -i '/oplus_chg_track\.h/d' drivers/misc/mediatek/pmic/mt6360/v1/pmu/mt6360_pmu_irq.c
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
