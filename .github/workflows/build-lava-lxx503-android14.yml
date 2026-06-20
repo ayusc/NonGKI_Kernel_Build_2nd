@@ -168,6 +168,11 @@ jobs:
           sed -i '/oplus_project\.h/d' kernel/trace/trace.c
           sed -i '/oplus_project\.h/d' kernel/trace/trace.c
           sed -i '1s/^/#define AGING 999\n/' kernel/trace/trace.c
+          # 1. Remove the missing Oplus binder scheduler header from the Android IPC driver
+          sed -i '/sched_assist_binder\.h/d' drivers/android/binder.c
+          
+          # 2. Remove the missing Oplus fork scheduler header from the process cloning engine
+          sed -i '/sched_assist_fork\.h/d' kernel/fork.c
 
       - name: 📦 Archive Patched Files for Review
         if: false
