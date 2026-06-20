@@ -152,7 +152,12 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
           echo "[+] Fix some bugs"
-                    
+          # 1. Fix the mm/built-in.a error by stripping the ghost multi_freearea object from the Makefile
+          sed -i '/multi_freearea/d' mm/Makefile
+          
+          # 2. Fix all 4 compiler errors inside kernel/sched/fair.c at once using a master header injection
+          sed -i '1s/^/#define SA_TYPE_ONCE_UX 0\n#define SA_TYPE_TURBO 0\n#define last_wake_ts last_sleep_ts\nstruct ux_sched_cls { struct cpumask cpus; };\nstruct ux_sched_cputopo { struct ux_sched_cls sched_cls[16]; };\n#ifndef BIG_CORE\n#define BIG_CORE 0\n#endif\n/' kernel/sched/fair.c
+                              
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
