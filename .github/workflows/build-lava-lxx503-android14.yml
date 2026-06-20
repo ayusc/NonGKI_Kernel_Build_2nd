@@ -184,6 +184,17 @@ jobs:
           sed -i '/audio\//d' sound/soc/codecs/Makefile
           find . -type f \( -name "Makefile*" -o -name "Kbuild*" \) -exec sed -i '/bf2253L_mipi_raw/d' {} +
           sed -i '/system\//d' drivers/soc/oplus/Makefile
+          echo "[+] Cleaning Code-Level Header & Inline Makefile Traps"
+          
+          # 1. Strip the missing header reference out of core C code
+          sed -i '/sched_assist_mutex\.h/d' include/linux/mutex.h
+          
+          # 2. Clean up the sound codecs compilation list
+          sed -i '/audio\//d' sound/soc/codecs/Makefile
+          
+          # 3. Surgically delete ONLY the missing camera driver name from the inline array
+          find drivers/misc/mediatek/imgsensor/ -type f \( -name "Makefile*" -o -name "Kbuild*" \) -exec sed -i 's|[^ ]*bf2253L_mipi_raw/||g' {} +
+          
                    
       - name: 📦 Archive Patched Files for Review
         if: false
