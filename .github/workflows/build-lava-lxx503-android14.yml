@@ -152,7 +152,6 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
           echo "[+] Fix some bugs"
-          echo "[+] Force-evaporating leftover empty camera folder shells"
           find . -type d -name "*bf2253L*" -exec rm -rf {} +
           find . -type d -name "*gc08a3sub*" -exec rm -rf {} +
           find . -type d -name "*gc5035wide*" -exec rm -rf {} +
@@ -164,6 +163,16 @@ jobs:
           sed -i 's/bf2253L_mipi_raw//g' arch/arm64/configs/$DEFCONFIG_NAME
           sed -i 's/gc5035wide_mipi_raw//g' arch/arm64/configs/$DEFCONFIG_NAME
           sed -i 's/s5k4h7yx_mipi_raw//g' arch/arm64/configs/$DEFCONFIG_NAME
+
+          echo "[+] Auto-generating Smart Makefiles for remaining camera folders"
+          # This sweeps your camera driver tree and injects dynamic Kbuild sheets 
+          # so your main camera (JN1) compiles perfectly
+          for dir in drivers/misc/mediatek/imgsensor/src/common/v1_1/*/; do
+              if [ -d "$dir" ] && [ ! -f "${dir}Makefile" ]; then
+                  echo 'obj-y += $(patsubst %.c,%.o,$(notdir $(wildcard $(src)/*.c)))' > "${dir}Makefile"
+                  echo "    -> Generated smart build instructions for: $(basename $dir)"
+              fi
+          done
 
           echo "[+] Sterilizing core kernel boot components (init/main.c)"
           sed -i '/oplus_phoenix/d' init/main.c
