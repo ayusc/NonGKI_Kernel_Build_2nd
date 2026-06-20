@@ -171,7 +171,10 @@ jobs:
           # 51. Fix project header, stubs, and get_eng_version mapping for mtk_ts_battery thermal driver
           sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_battery.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_battery.c
-
+          # 52. Fix project header, stubs, and get_eng_version mapping for mtk_ts_pa thermal driver
+          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_pa.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_pa.c
+          
 
       - name: 📦 Archive Patched Files for Review
         if: false
