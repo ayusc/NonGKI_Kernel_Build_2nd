@@ -154,7 +154,19 @@ jobs:
           echo "[+] Fix some bugs"          
           # 46. Stub out project identity checks in mtk_nanohub to prevent undeclared identifier errors
           sed -i '1s/^/#define is_project(...) 0\n#define is_support_new_arch_func(...) 0\n/' drivers/misc/mediatek/sensor/2.0/mtk_nanohub/mtk_nanohub.c
+          # 47. Fix project header and stubs for oplus_ts_tempntc thermal driver
+          sed -i '/oppo_project\.h/d' drivers/misc/mediatek/thermal/common/thermal_zones/oplus_ts_tempntc.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/thermal/common/thermal_zones/oplus_ts_tempntc.c
           
+          # 48. Fix project header, stubs, and get_eng_version mapping for mtk_lvts_tc thermal core
+          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/mt6833/src/mtk_lvts_tc.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/mt6833/src/mtk_lvts_tc.c
+          
+          # 49. Fix project header, stubs, and get_eng_version mapping for mtk_cooler_sysrst driver
+          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/common/coolers/mtk_cooler_sysrst.c
+          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/common/coolers/mtk_cooler_sysrst.c
+          
+
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
