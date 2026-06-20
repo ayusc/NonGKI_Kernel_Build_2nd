@@ -1,4 +1,4 @@
- Xname: Build Lava Blaze 5G (Android 14)
+name: Build Lava Blaze 5G (Android 14)
 
 on:
   workflow_call:
@@ -152,39 +152,7 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           
           echo "[+] Fix some bugs"          
-          # 46. Stub out project identity checks in mtk_nanohub to prevent undeclared identifier errors
-          sed -i '1s/^/#define is_project(...) 0\n#define is_support_new_arch_func(...) 0\n/' drivers/misc/mediatek/sensor/2.0/mtk_nanohub/mtk_nanohub.c
-          # 47. Fix project header and stubs for oplus_ts_tempntc thermal driver
-          sed -i '/oppo_project\.h/d' drivers/misc/mediatek/thermal/common/thermal_zones/oplus_ts_tempntc.c
-          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/thermal/common/thermal_zones/oplus_ts_tempntc.c
-          
-          # 48. Fix project header, stubs, and get_eng_version mapping for mtk_lvts_tc thermal core
-          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/mt6833/src/mtk_lvts_tc.c
-          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/mt6833/src/mtk_lvts_tc.c
-          
-          # 49. Fix project header, stubs, and get_eng_version mapping for mtk_cooler_sysrst driver
-          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/common/coolers/mtk_cooler_sysrst.c
-          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/common/coolers/mtk_cooler_sysrst.c
-          # 50. Fix project header, stubs, and get_eng_version mapping for mtk_cooler_kshutdown driver
-          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/mtk_cooler_kshutdown.c
-          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/mtk_cooler_kshutdown.c
-          # 51. Fix project header, stubs, and get_eng_version mapping for mtk_ts_battery thermal driver
-          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_battery.c
-          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_battery.c
-          # 52. Fix project header, stubs, and get_eng_version mapping for mtk_ts_pa thermal driver
-          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_pa.c
-          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_pa.c
-          # 53. Fix project header, stubs, and get_eng_version mapping for mtk_ts_pmic thermal driver
-          sed -i '/oplus_project\.h/d' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_pmic.c
-          sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' drivers/misc/mediatek/thermal/common/thermal_zones/mtk_ts_pmic.c
-          # 54. Proactive sweep loop to catch and fix all remaining thermal driver ghost headers
-          echo "[+] Proactively sweeping thermal folder for ghost headers..."
-          for file in $(find drivers/misc/mediatek/thermal/ -type f \( -name "*.c" -o -name "*.h" \) -exec grep -lE "oplus_project\.h|oppo_project\.h" {} +); do
-              echo "  -> Patching: $file"
-              sed -i '/oplus_project\.h/d' "$file"
-              sed -i '/oppo_project\.h/d' "$file"
-              sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n#define get_eng_version() 0\n/' "$file"
-          done          
+        
           # 55. Master Vendor Stub File: Satisfy all missing ODM hooks (Oppo/Oplus) to allow vmlinux & module linking
           echo "[+] Creating master kernel/oplus_performance_stubs.c to solve ALL final linker errors"
           cat << 'EOF' > kernel/oplus_performance_stubs.c
