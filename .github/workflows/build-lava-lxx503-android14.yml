@@ -179,6 +179,7 @@ jobs:
           # 2. Fix the missing drivers/soc/oplus/system/Makefile error by completely stubbing out the parent oplus Makefile
           echo "obj-y +=" > drivers/soc/oplus/Makefile
           sed -i '/oplus/d' drivers/soc/Makefile
+          sed -i '/oplus_ion/d' drivers/staging/android/mtk_ion/Makefile
           
       - name: 📦 Archive Patched Files for Review
         if: false
