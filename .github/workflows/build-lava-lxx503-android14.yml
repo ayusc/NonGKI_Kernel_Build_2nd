@@ -227,7 +227,8 @@ jobs:
           # 44. Fix project header and stubs for MediaTek Nanohub sensor driver
           sed -i '/oppo_project\.h/d' drivers/misc/mediatek/sensor/2.0/mtk_nanohub/mtk_nanohub.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/sensor/2.0/mtk_nanohub/mtk_nanohub.c
-
+          # 45. Remove missing Oplus sensor device info header from MediaTek Nanohub driver
+          sed -i '/sensor_devinfo\.h/d' drivers/misc/mediatek/sensor/2.0/mtk_nanohub/mtk_nanohub.c
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
