@@ -186,6 +186,13 @@ jobs:
           # 18. Fix project header and stubs for MediaTek Wi-Fi RLM domain engine
           sed -i '/oplus_project\.h/d' drivers/misc/mediatek/connectivity/wlan/core/gen4m/mgmt/rlm_domain.c
           sed -i '1s/^/#define AGING 999\n#define PREVERSION 998\n#define HIGH_TEMP_AGING 997\n#define FACTORY 996\n/' drivers/misc/mediatek/connectivity/wlan/core/gen4m/mgmt/rlm_domain.c
+          # 19. Bypass Oplus scheduler hooks in the workqueue core completely
+          sed -i '/sched_assist_common\.h/d' kernel/workqueue.c
+          sed -i '1s/^/#undef OPLUS_FEATURE_SCHED_ASSIST\n/' kernel/workqueue.c
+          
+          # 20. Fix display kernel event header and stubs for MediaTek DRM CRTC driver
+          sed -i '/oplus_mm_kevent_fb\.h/d' drivers/gpu/drm/mediatek/mtk_drm_crtc.c
+          sed -i '1s/^/#define MM_FB_KEY_RATELIMIT_1H 0\n#define mm_fb_display_kevent(...) do {} while(0)\n/' drivers/gpu/drm/mediatek/mtk_drm_crtc.c
 
       - name: 📦 Archive Patched Files for Review
         if: false
