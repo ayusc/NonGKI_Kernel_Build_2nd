@@ -196,6 +196,12 @@ jobs:
           
           # 2. Clear the missing scheduler tracking hook from the core Linux scheduler engine
           sed -i '/sched_assist_common\.h/d' kernel/sched/core.c
+
+          # 1. Fix the vmstat error by creating a dummy variable for the missing proc array address
+          sed -i '1s/^/static const int proc_free_area_fops = 0;\n/' mm/vmstat.c
+          
+          # 2. Fix the core scheduler errors by nullifying the missing Turbo macros and variables
+          sed -i '1s/^/#define SA_TYPE_TURBO 0\nstatic int ux_uclamp_value = 0;\n/' kernel/sched/core.c
                     
       - name: 📦 Archive Patched Files for Review
         if: false
