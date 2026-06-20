@@ -167,14 +167,18 @@ jobs:
           sed -i '/oplus/d' drivers/input/touchscreen/Kconfig
           find . -type f -name "Kconfig*" -exec sed -i '/oplus/d' {} +
           find . -type f -name "Kconfig*" | while read -r kfile; do
-              # Find every line that tries to 'source' another file
-              grep -oP '^\s*source\s+"\K[^"]+' "$kfile" | while read -r missing_file; do
-                  # Ignore variables, check if the file is actually missing
-                  if [[ "$missing_file" != *\$* ]]; then
+              # Extract path whether it has quotes or not
+              awk '/^[ \t]*source[ \t]+/ { gsub(/"/, "", $2); print $2 }' "$kfile" | while read -r missing_file; do
+                  # Ignore variables and check if the file is genuinely missing
+                  if [[ -n "$missing_file" ]] && [[ "$missing_file" != *\$* ]]; then
                       if [ ! -f "$missing_file" ]; then
-                          echo "[-] OEM dropped $missing_file. Creating dummy file..."
+                          echo "[-] OEM dropped $missing_file. Creating dummy files..."
+                          # Create the missing directory
                           mkdir -p "$(dirname "$missing_file")"
+                          # Create the blank Kconfig
                           touch "$missing_file"
+                          # Create a blank Makefile to prevent future build crashes
+                          touch "$(dirname "$missing_file")/Makefile"
                       fi
                   fi
               done
