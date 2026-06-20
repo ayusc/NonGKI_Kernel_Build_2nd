@@ -166,6 +166,19 @@ jobs:
           sed -i '/oplus/d' drivers/input/Kconfig
           sed -i '/oplus/d' drivers/input/touchscreen/Kconfig
           find . -type f -name "Kconfig*" -exec sed -i '/oplus/d' {} +
+          find . -type f -name "Kconfig*" | while read -r kfile; do
+              # Find every line that tries to 'source' another file
+              grep -oP '^\s*source\s+"\K[^"]+' "$kfile" | while read -r missing_file; do
+                  # Ignore variables, check if the file is actually missing
+                  if [[ "$missing_file" != *\$* ]]; then
+                      if [ ! -f "$missing_file" ]; then
+                          echo "[-] OEM dropped $missing_file. Creating dummy file..."
+                          mkdir -p "$(dirname "$missing_file")"
+                          touch "$missing_file"
+                      fi
+                  fi
+              done
+          done
           
       - name: 📦 Archive Patched Files for Review
         if: false
