@@ -152,10 +152,11 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           
           echo "[+] Fix some bugs"          
-          # 55. Master Vendor Stub File: Satisfy all missing ODM hooks (Oppo/Oplus) to allow vmlinux linking
+          # 55. Master Vendor Stub File: Satisfy all missing ODM hooks (Oppo/Oplus) to allow vmlinux & module linking
           echo "[+] Creating master kernel/oplus_performance_stubs.c to solve ALL final linker errors"
           cat << 'EOF' > kernel/oplus_performance_stubs.c
           #include <linux/kernel.h>
+          #include <linux/module.h>
           
           // Disable strict prototype warnings so the compiler accepts our universal dummy functions
           #pragma GCC diagnostic ignored "-Wstrict-prototypes"
@@ -204,7 +205,6 @@ jobs:
           long ajust_zone_label() { return 0; }
           long is_reclaim_should_cancel() { return 0; }
           long sched_assist_target_comm() { return 0; }
-          long get_project() { return 0; }
           
           // --- NEW BATCH: PMIC, CHARGING, USB ---
           long oplus_chg_check_break() { return 0; }
@@ -233,7 +233,6 @@ jobs:
           long virtual_sensor_report_data() { return 0; }
           long oplus_init_sensor_state() { return 0; }
           long mm_keylog_write_modemdump() { return 0; }
-          long is_project() { return 0; }
           long register_device_proc() { return 0; }
           long oplus_chg_set_camera_on() { return 0; }
           long pmic_gpio_enable() { return 0; }
@@ -273,6 +272,13 @@ jobs:
           long sia81xx_stop() { return 0; }
           long oplus_ext_amp_recv_enable() { return 0; }
           long oplus_ext_amp_r_enable() { return 0; }
+
+          // --- EXPORTED SYMBOLS FOR LOADABLE MODULES ---
+          long get_project() { return 0; }
+          EXPORT_SYMBOL(get_project);
+          
+          long is_project() { return 0; }
+          EXPORT_SYMBOL(is_project);
           
           EOF
           
