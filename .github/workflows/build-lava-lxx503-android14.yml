@@ -166,6 +166,8 @@ jobs:
 
           # Remove the missing Oplus project header from the kernel tracer
           sed -i '/oplus_project\.h/d' kernel/trace/trace.c
+          sed -i '/oplus_project\.h/d' kernel/trace/trace.c
+          sed -i '1s/^/#define AGING 999\n/' kernel/trace/trace.c
 
       - name: 📦 Archive Patched Files for Review
         if: false
