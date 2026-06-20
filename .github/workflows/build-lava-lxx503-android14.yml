@@ -153,56 +153,6 @@ jobs:
 
           echo "[+] Fix some bugs"
 
-          echo "[+] Injecting Dummy Phoenix tracking parameters to clear init/main.c compilation"
-          sed -i '1s/^/#define KERNEL_MM_INIT_DONE 0\n#define KERNEL_LOCAL_IRQ_ENABLE 0\n#define KERNEL_DELAYACCT_INIT_DONE 0\n#define KERNEL_DRIVER_INIT_DONE 0\n#define KERNEL_DO_INITCALLS_DONE 0\n#define KERNEL_INIT_DONE 0\n#define KERNEL_DO_BASIC_SETUP_DONE 0\nstatic void (*phx_set_boot_stage)(int stage) = NULL;\n/' init/main.c
-
-          # === THE ABSOLUTE CAMERA SYSTEM FIX ===
-          echo "[+] Dynamic Camera Driver Auto-Stubber"
-          SENSOR_LIST=$(grep 'CONFIG_CUSTOM_KERNEL_IMGSENSOR=' arch/arm64/configs/$DEFCONFIG_NAME | sed 's/CONFIG_CUSTOM_KERNEL_IMGSENSOR=//' | tr -d '"')
-          for sensor in $SENSOR_LIST; do
-              TARGET_DIR="drivers/misc/mediatek/imgsensor/src/common/v1_1/$sensor"
-              if [ ! -f "$TARGET_DIR/Makefile" ]; then
-                  echo "    -> Auto-stubbing missing camera dependency: $sensor"
-                  mkdir -p "$TARGET_DIR"
-                  echo "obj-y +=" > "$TARGET_DIR/Makefile"
-              fi
-          done
-
-          # === SENSOR 2.0 ARCHITECTURE PURGE ===
-          echo "[+] Purging leftover MediaTek sensor 2.0 uncleaned module references"
-          find . -type f -name "Makefile*" -exec sed -i '/oplus_sensor_devinfo/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/oplus_virtual_sensor/d' {} +
-
-          # 1. Fix the 'NULL' undeclared identifier error in init/main.c
-          sed -i 's/ = NULL//g' init/main.c
-          
-          # 2. Fix the missing drivers/soc/oplus/system/Makefile error by completely stubbing out the parent oplus Makefile
-          echo "obj-y +=" > drivers/soc/oplus/Makefile
-          sed -i '/oplus/d' drivers/soc/Makefile
-          sed -i '/oplus_ion/d' drivers/staging/android/mtk_ion/Makefile
-
-          sed -i '/sched_assist_common\.h/d' kernel/cgroup/cgroup-v1.c
-
-          sed -i '/multi_freearea\.h/d' mm/page_alloc.c
-          
-          sed -i '/healthinfo\/ion\.h/d' fs/proc/meminfo.c
-
-          sed -i '/process_mm_reclaim\.h/d' mm/vmscan.c
-          
-          sed -i '/sched_assist_common\.h/d' kernel/locking/rwsem-xadd.c
-
-          # 1. Clear the ghost memory optimization header from virtual memory statistics
-          sed -i '/multi_freearea\.h/d' mm/vmstat.c
-          
-          # 2. Clear the missing scheduler tracking hook from the core Linux scheduler engine
-          sed -i '/sched_assist_common\.h/d' kernel/sched/core.c
-
-          # 1. Fix the vmstat error by creating a dummy variable for the missing proc array address
-          sed -i '1s/^/static const int proc_free_area_fops = 0;\n/' mm/vmstat.c
-          
-          # 2. Fix the core scheduler errors by nullifying the missing Turbo macros and variables
-          sed -i '1s/^/#define SA_TYPE_TURBO 0\nstatic int ux_uclamp_value = 0;\n/' kernel/sched/core.c
-
           # 1. Fix the fair.c scheduler error by dropping the missing header
           sed -i '/sched_assist_common\.h/d' kernel/sched/fair.c
           
