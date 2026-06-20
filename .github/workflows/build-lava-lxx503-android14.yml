@@ -163,6 +163,9 @@ jobs:
           # 12. Remove missing project configuration header from the hardware keypad driver
           sed -i '/oplus_project\.h/d' drivers/input/keyboard/mediatek/kpd.c
 
+          # 13. Remove the missing Oppo process header from the process exit handling core
+          sed -i '/oppo_process\.h/d' kernel/exit.c
+
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
