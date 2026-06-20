@@ -190,7 +190,13 @@ jobs:
           sed -i '/process_mm_reclaim\.h/d' mm/vmscan.c
           
           sed -i '/sched_assist_common\.h/d' kernel/locking/rwsem-xadd.c
+
+          # 1. Clear the ghost memory optimization header from virtual memory statistics
+          sed -i '/multi_freearea\.h/d' mm/vmstat.c
           
+          # 2. Clear the missing scheduler tracking hook from the core Linux scheduler engine
+          sed -i '/sched_assist_common\.h/d' kernel/sched/core.c
+                    
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
