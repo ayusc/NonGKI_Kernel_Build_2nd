@@ -152,50 +152,8 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
           echo "[+] Fix some bugs"
-          find . -type f -name "Kconfig*" -exec sed -i 's/\r//g' {} +
-          sed -i '/sched_assist\/Kconfig/d' init/Kconfig
-          sed -i '/klockopt\/Kconfig/d' init/Kconfig
-          sed -i '/rootguard\/Kconfig/d' arch/arm64/Kconfig
-          sed -i '/uxio_first\/Kconfig/d' block/Kconfig
-          sed -i '/healthinfo\/Kconfig/d' mm/Kconfig
-          sed -i '/malloc_track\/Kconfig/d' mm/Kconfig
-          sed -i '/task_mem\/Kconfig/d' mm/Kconfig
-          sed -i '/oplus_modules\/Kconfig/d' net/Kconfig
-          sed -i '/oplus/d' drivers/misc/mediatek/sensors-1.0/Kconfig
-          sed -i '/oplus/d' drivers/misc/mediatek/sensor/2.0/Kconfig
-          sed -i '/oplus/d' drivers/input/Kconfig
-          sed -i '/oplus/d' drivers/input/touchscreen/Kconfig
-          find . -type f -name "Kconfig*" -exec sed -i '/oplus/d' {} +
-          find . -type f -name "Kconfig*" -exec sed -i '/uff_fp_drivers\/Kconfig/d' {} +
-          find . -type f -name "Kconfig*" -exec sed -i '/sound\/soc\/codecs\/audio\/Kconfig/d' {} +
-          find . -type f -name "Kconfig*" -exec sed -i '/cpu_jankinfo\/Kconfig/d' {} +
-          find . -type f -name "Kconfig*" -exec sed -i '/fs\/proc\/healthinfo\/Kconfig/d' {} +
-          find . -type f -name "Kconfig*" -exec sed -i '/task_cpustats\/Kconfig/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/sched_assist/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/healthinfo/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/klockopt/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/uxio_first/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/malloc_track/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/task_mem/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/oplus_modules/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/uff_fp_drivers/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/cpu_jankinfo/d' {} +
-          find . -type f -name "Makefile*" -exec sed -i '/task_cpustats/d' {} +
-          sed -i '/audio\//d' sound/soc/codecs/Makefile
-          find . -type f \( -name "Makefile*" -o -name "Kbuild*" \) -exec sed -i '/bf2253L_mipi_raw/d' {} +
-          sed -i '/system\//d' drivers/soc/oplus/Makefile
-          echo "[+] Cleaning Code-Level Header & Inline Makefile Traps"
           
-          # 1. Strip the missing header reference out of core C code
-          sed -i '/sched_assist_mutex\.h/d' include/linux/mutex.h
-          
-          # 2. Clean up the sound codecs compilation list
-          sed -i '/audio\//d' sound/soc/codecs/Makefile
-          
-          # 3. Surgically delete ONLY the missing camera driver name from the inline array
-          find drivers/misc/mediatek/imgsensor/ -type f \( -name "Makefile*" -o -name "Kbuild*" \) -exec sed -i 's|[^ ]*bf2253L_mipi_raw/||g' {} +
-          
-                   
+  
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
