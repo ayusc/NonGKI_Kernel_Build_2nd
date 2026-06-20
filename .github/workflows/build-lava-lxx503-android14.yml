@@ -202,6 +202,12 @@ jobs:
           
           # 2. Fix the core scheduler errors by nullifying the missing Turbo macros and variables
           sed -i '1s/^/#define SA_TYPE_TURBO 0\nstatic int ux_uclamp_value = 0;\n/' kernel/sched/core.c
+
+          # 1. Fix the fair.c scheduler error by dropping the missing header
+          sed -i '/sched_assist_common\.h/d' kernel/sched/fair.c
+          
+          # 2. Fix the mm/built-in.a compile error by stripping the ghost object from the Makefile
+          sed -i '/process_mm_reclaim/d' mm/Makefile
                     
       - name: 📦 Archive Patched Files for Review
         if: false
