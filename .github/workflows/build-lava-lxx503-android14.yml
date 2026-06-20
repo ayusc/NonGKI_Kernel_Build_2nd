@@ -152,8 +152,13 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
 
           echo "[+] Fix some bugs"
-          sed -i 's/bf2253L_mipi_raw//g' arch/arm64/configs/$DEFCONFIG_NAME
+          find . -type d -name "*bf2253L*" -exec rm -rf {} +
+          find . -type d -name "*gc08a3sub*" -exec rm -rf {} +
+
+          echo "[+] Stripping all 3 non-existent cameras from the defconfig list"
+          sed -i 's/gc08a3sub_mipi_raw//g' arch/arm64/configs/$DEFCONFIG_NAME
           sed -i 's/bf2253Lmacro_mipi_raw//g' arch/arm64/configs/$DEFCONFIG_NAME
+          sed -i 's/bf2253L_mipi_raw//g' arch/arm64/configs/$DEFCONFIG_NAME
 
           echo "[+] Sterilizing core kernel boot components (init/main.c)"
           sed -i '/oplus_phoenix/d' init/main.c
