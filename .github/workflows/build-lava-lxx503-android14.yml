@@ -156,7 +156,6 @@ jobs:
           echo "[+] Creating master kernel/oplus_performance_stubs.c to solve ALL final linker errors"
           cat << 'EOF' > kernel/oplus_performance_stubs.c
           #include <linux/kernel.h>
-          #include <linux/module.h>
           
           // Disable strict prototype warnings so the compiler accepts our universal dummy functions
           #pragma GCC diagnostic ignored "-Wstrict-prototypes"
@@ -206,7 +205,6 @@ jobs:
           long is_reclaim_should_cancel() { return 0; }
           long sched_assist_target_comm() { return 0; }
           long get_project() { return 0; }
-          EXPORT_SYMBOL(get_project);
           
           // --- NEW BATCH: PMIC, CHARGING, USB ---
           long oplus_chg_check_break() { return 0; }
@@ -236,7 +234,6 @@ jobs:
           long oplus_init_sensor_state() { return 0; }
           long mm_keylog_write_modemdump() { return 0; }
           long is_project() { return 0; }
-          EXPORT_SYMBOL(is_project);
           long register_device_proc() { return 0; }
           long oplus_chg_set_camera_on() { return 0; }
           long pmic_gpio_enable() { return 0; }
@@ -276,6 +273,7 @@ jobs:
           long sia81xx_stop() { return 0; }
           long oplus_ext_amp_recv_enable() { return 0; }
           long oplus_ext_amp_r_enable() { return 0; }
+          
           EOF
           
           # Inject the master stub into the core kernel compilation sequence if not already present
