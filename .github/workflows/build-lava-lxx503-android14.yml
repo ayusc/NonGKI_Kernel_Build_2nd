@@ -152,21 +152,19 @@ jobs:
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           
           echo "[+] Fix some bugs"          
-          # 55. Master Vendor Stub File: Satisfy all missing ODM hooks (Oppo/Oplus) to allow vmlinux & module linking
-          echo "[+] Creating master kernel/oplus_performance_stubs.c to solve ALL final linker errors"
+          # 55. Split stubs to prevent prototype conflicts
+          echo "[+] Creating kernel/oplus_performance_stubs.c (Isolated from headers)"
           cat << 'EOF' > kernel/oplus_performance_stubs.c
-          #include <linux/kernel.h>
-          #include <linux/module.h>
-          
-          // Disable strict prototype warnings so the compiler accepts our universal dummy functions
+          // NO HEADERS! Hides dummy functions from real prototype definitions
           #pragma GCC diagnostic ignored "-Wstrict-prototypes"
           #pragma GCC diagnostic ignored "-Wmissing-prototypes"
-          
-          // --- VARIABLES ---
-          void *proc_ux_state_operations = NULL;
+          #pragma GCC diagnostic ignored "-Wreturn-type"
+          #pragma GCC diagnostic ignored "-Wimplicit-int"
+
+          void *proc_ux_state_operations = 0;
           long ion_total = 0;
           int ux_sched_cputopo = 0;
-          
+
           // --- PREVIOUS BATCH ---
           long init_task_ux_info() { return 0; }
           long phx_is_phoenix_boot_completed() { return 1; }
@@ -184,10 +182,10 @@ jobs:
           long enqueue_ux_thread() { return 0; }
           long dequeue_ux_thread() { return 0; }
           long should_ux_preempt_wakeup() { return 0; }
-          void *pick_ux_thread() { return NULL; }
+          void *pick_ux_thread() { return 0; }
           long is_heavy_ux_task() { return 0; }
           long should_ux_task_skip_cpu() { return 0; }
-          
+
           // --- NEW BATCH: SCHEDULER & MEMORY ---
           long should_ux_task_skip_further_check() { return 0; }
           long drop_ux_task_cpus() { return 0; }
@@ -205,7 +203,7 @@ jobs:
           long ajust_zone_label() { return 0; }
           long is_reclaim_should_cancel() { return 0; }
           long sched_assist_target_comm() { return 0; }
-          
+
           // --- NEW BATCH: PMIC, CHARGING, USB ---
           long oplus_chg_check_break() { return 0; }
           long oplus_chg_track_check_wired_charging_break() { return 0; }
@@ -228,7 +226,7 @@ jobs:
           long is_fuelgauge_apply() { return 0; }
           long oplus_get_chg_unwakelock() { return 0; }
           long oplus_gauge_set_event() { return 0; }
-          
+
           // --- NEW BATCH: SENSORS, CAMERA, NFC ---
           long virtual_sensor_report_data() { return 0; }
           long oplus_init_sensor_state() { return 0; }
@@ -244,9 +242,9 @@ jobs:
           long pmic_ldo_set_disable() { return 0; }
           long get_PCB_Version() { return 0; }
           long oplus_chg_set_camera_status() { return 0; }
-          long is_support_chip() { return 1; } // NFC probe safeguard
+          long is_support_chip() { return 1; }
           long register_device_proc_for_ufsplus() { return 0; }
-          
+
           // --- NEW BATCH: BINDER & UI ---
           long binder_unset_inherit_ux() { return 0; }
           long binder_set_inherit_ux() { return 0; }
@@ -256,7 +254,7 @@ jobs:
           long set_once_ux() { return 0; }
           long ux_debug_enable() { return 0; }
           long ux_debug_systrace_c() { return 0; }
-          
+
           // --- NEW BATCH: AUDIO (AW87339 / SIA81XX) ---
           long aw87339_audio_spk_if_kspk() { return 0; }
           long aw87339_audio_spk_if_off() { return 0; }
@@ -272,27 +270,39 @@ jobs:
           long sia81xx_stop() { return 0; }
           long oplus_ext_amp_recv_enable() { return 0; }
           long oplus_ext_amp_r_enable() { return 0; }
+          EOF
 
-          // --- EXPORTED SYMBOLS FOR LOADABLE MODULES ---
-          long get_project() { return 0; }
+          echo "[+] Creating kernel/oplus_project_stubs.c (For Module Exports)"
+          cat << 'EOF' > kernel/oplus_project_stubs.c
+          #include <linux/export.h>
+          
+          #pragma GCC diagnostic ignored "-Wstrict-prototypes"
+          #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+          
+          long get_project(void) { return 0; }
           EXPORT_SYMBOL(get_project);
           
-          long is_project() { return 0; }
+          long is_project(void) { return 0; }
           EXPORT_SYMBOL(is_project);
-          
           EOF
-          
-          # Inject the master stub into the core kernel compilation sequence if not already present
-          if ! grep -q "oplus_performance_stubs.o" kernel/Makefile; then
-              echo "obj-y += oplus_performance_stubs.o" >> kernel/Makefile
-          fi
-          
-          # 56. Fix double export of audio codec symbols to prevent modpost fatal warnings
-          sed -i '/EXPORT_SYMBOL(accdet_read_audio_res);/d' sound/soc/codecs/mt6357-accdet.c
-          sed -i '/EXPORT_SYMBOL(accdet_late_init);/d' sound/soc/codecs/mt6357-accdet.c
-          sed -i '/EXPORT_SYMBOL(accdet_read_audio_res);/d' sound/soc/codecs/mt6359-accdet.c
-          sed -i '/EXPORT_SYMBOL(accdet_late_init);/d' sound/soc/codecs/mt6359-accdet.c
 
+          # Inject both files into the core kernel compilation sequence
+          if ! grep -q "oplus_performance_stubs.o" kernel/Makefile; then
+              echo "obj-y += oplus_performance_stubs.o oplus_project_stubs.o" >> kernel/Makefile
+          fi
+
+          # 56. Fix double export of audio codec symbols to prevent modpost fatal warnings
+          sed -i '/EXPORT_SYMBOL(accdet_read_audio_res);/d' sound/soc/codecs/mt6357-accdet.c || true
+          sed -i '/EXPORT_SYMBOL(accdet_late_init);/d' sound/soc/codecs/mt6357-accdet.c || true
+          sed -i '/EXPORT_SYMBOL(accdet_read_audio_res);/d' sound/soc/codecs/mt6359-accdet.c || true
+          sed -i '/EXPORT_SYMBOL(accdet_late_init);/d' sound/soc/codecs/mt6359-accdet.c || true
+
+          # 57. Container OOM Prevention: Force linker to use 1 thread and strip heavy debug info
+          echo "[+] Stripping debug info to save RAM"
+          sed -i 's/CONFIG_DEBUG_INFO=y/# CONFIG_DEBUG_INFO is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
+          echo "CONFIG_DEBUG_INFO=n" >> arch/arm64/configs/$DEFCONFIG_NAME
+          echo "KBUILD_LDFLAGS += --threads=1" >> Makefile
+ 
       - name: 📦 Archive Patched Files for Review
         if: false
         run: |
