@@ -58,7 +58,7 @@ env:
   # Other env
   PYTHON_VERSION: "2" # Only 2(Ubuntu 22.04 and Ubuntu 20.04) or 3(Any OS Versions).
 
-  PACK_METHOD: "MKBOOTIMG" # Anykernel3 need SOURCE and BRANCH, MKBOOTIMG needn't it.
+  PACK_METHOD: "Anykernel3" # Anykernel3 need SOURCE and BRANCH, MKBOOTIMG needn't it.
   PACK_KMODULES: "false" # if u want pack kernel modules (.ko) into Anykernel3.
 
   KERNELSU_METHOD: "shell" # shell, manual and only.
@@ -305,6 +305,13 @@ jobs:
         
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
+
+      - name: 🧹 Force Raw Image Selection
+        run: |
+          IMAGE_DIR="$GITHUB_WORKSPACE/device_kernel/out/arch/arm64/boot"
+          rm -f $IMAGE_DIR/Image.gz $IMAGE_DIR/Image.gz-dtb
+          echo "[+] Deleted Image.gz and Image.gz-dtb. Target binary is now raw Image."
+        shell: bash  
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
