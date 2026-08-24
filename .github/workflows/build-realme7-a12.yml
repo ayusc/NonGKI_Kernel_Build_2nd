@@ -1,0 +1,311 @@
+name: Build Realme 7 (Stock A12)
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches:
+      - mainline
+    paths:
+      - '.github/workflows/build-realme7-a12.yml'
+
+env:
+  # Device env
+  DEVICE_NAME : "realme_7"
+  DEVICE_CODENAME : "salaa"
+
+  CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
+  EXTRA_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu- CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++"
+  
+  KERNEL_SOURCE : "https://github.com/realme-kernel-opensource/realme7_realme8_Narzo30_Narzo20pro-AndroidS-kernel-source" 
+  KERNEL_BRANCH : "master" 
+
+  # Proton Clang (Clang 13)
+  CLANG_SOURCE : "https://github.com/kdrag0n/proton-clang.git"
+  CLANG_BRANCH : "master"
+
+  GCC_GNU : true
+  GCC_64_SOURCE : ""
+  GCC_64_BRANCH : ""
+  GCC_32_SOURCE : ""
+  GCC_32_BRANCH : ""
+
+  DEFCONFIG_SOURCE: ""
+  DEFCONFIG_NAME : "k85v1_64_defconfig" 
+  DEFCONFIG_ORIGIN_IMAGE: ""
+  DEFCONFIG_FROM_BOOT: false
+
+  KERNELSU_SOURCE : ""
+  KERNELSU_BRANCH : ""
+
+  KERNELSU_AUTO_GET : "false" # if u want easy setting kernelsu, u can true.
+  KERNELSU_AUTO_FORK : "" # xxksu, rsuntk, next, resukisu and sukisu
+
+  SUSFS_ENABLE : "false"
+  SUSFS_FIXED : "true"
+
+  AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
+  AK3_BRANCH : "master"
+
+  # Replace with stock boot.img URL for Realme 7 Android 12
+  BOOT_SOURCE : "" 
+
+  NEED_DTBO : false
+  NEED_SAFE_DTBO : false
+
+  ROM_TEXT : "stock_a12" # Latest stock for Realme 7 is Android 12
+
+  # Other env
+  PYTHON_VERSION: "2" # Only 2(Ubuntu 22.04 and Ubuntu 20.04) or 3(Any OS Versions).
+
+  PACK_METHOD: "Anykernel3" # Anykernel3 need SOURCE and BRANCH, MKBOOTIMG needn't it.
+  PACK_KMODULES: "false" # if u want pack kernel modules (.ko) into Anykernel3.
+
+  KERNELSU_METHOD: "" # shell, manual and only.
+
+  PATCHES_SOURCE: "ayusc/NonGKI_Kernel_Patches" 
+  PATCHES_BRANCH: "realme_kernel" 
+
+  SUSFS_FOLDER_FIXED: "realme7" # Fill in your patch prefix directory here. 
+  SUSFS_PATCH_FIXED: "susfs_fixed" # Fill in your patches here.
+
+  REKERNEL_ENABLE: "false" # if u need Re:Kernel.
+  DROIDSPACES_ENABLE: "false" # if u need Droidspaces or LXC/Docker.
+
+  HOOK_METHOD: "syscall" # Manual hook method -> syscall.
+
+  KERNEL_PATCH: "false" # If your kernel version is <= 4.9, you have the option of enabling the patch to patch the kernel_write and kernel_read functions. 
+
+  KPM_ENABLE: "false" # Anyone devices.
+  KPM_INLINE: "false" # Only use it for SukiSU-Ultra.
+  KPM_KPATCH_NEXT: "false" # If u want hook KPatch-Next in build step.
+  KPM_PATCH_SOURCE: ""
+
+  BASEBAND_GUARD_ENABLE: "false" # if u want prevent unauthorized writes to critical partitions/device nodes.
+  BASEBAND_GUARD_BOOT: "false" # if u want to protect boot partition.
+
+  GENERATE_DTB: "false" # if u kernel need DTB , but cannot auto generate it. (Only Anykernel3).
+  GENERATE_CHIP: ""
+
+  BUILD_DEBUGGER: "false" # Output build errors.
+  SKIP_PATCH: "false" # Ignore errors found in Patch Debugger.
+
+  BUILD_OTHER_CONFIG: "false" # Merge config files.
+  MERGE_CONFIG_FILES: ""
+
+  FREE_MORE_SPACE: "false" # if u want get more space, enabled it.
+
+jobs:
+  build-kernel:
+    name: Realme 7 (salaa)
+    runs-on: ubuntu-latest # u can changed to ubuntu 22.04, and need container set ubuntu-latest
+    container: ubuntu:focal # if u need use arch linux -> archlinux/archlinux:latest or ubuntu 20.04 -> ubuntu:focal
+    env:
+      CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
+      CCACHE_NOHASHDIR: "true"
+      CCACHE_HARDLINK: "true"
+      DEBIAN_FRONTEND: noninteractive
+
+    steps:
+      - name: ⏰ Checkout repository
+        uses: actions/checkout@v6
+
+      - name: 🛠️ Setup Container Environment
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -y
+          apt-get remove -y g++-multilib gcc-multilib || true
+          apt-get autoremove -y || true
+          apt-get install -y --no-install-recommends \
+            sudo git wget ca-certificates \
+            binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
+            device-tree-compiler python2 python-is-python2 \
+            bc flex bison libssl-dev libelf-dev libncurses5 libtinfo5 \
+            libc6-dev libncurses-dev lz4 zip unzip
+          git config --global --add safe.directory '*'
+        shell: bash
+
+      - name: ⌛️ Compilation environment preparation
+        uses: ./.github/workflows/build-env
+
+      - name: ⚙️ Get neccssary tools
+        uses: ./.github/workflows/build-ready
+
+      - name: 🪝 Patch Kernel of SUSFS
+        uses: ./.github/workflows/patch-susfs
+
+      - name: 🔗 Patch for no-kprobe
+        uses: ./.github/workflows/patch-no-kprobe
+
+      - name: 🪛 Extra Kernel Options
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+          
+          echo "[+] Disabling LTO to prevent LLVM link errors and ABI mismatches"
+          sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
+          echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
+
+          echo "[+] Patching Makefile Warnings"
+          echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w -fno-builtin-stpcpy" >> Makefile
+          echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w -fcommon" >> Makefile
+          echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w -fcommon" >> Makefile
+          
+          echo "[+] Bypassing Strict Module Versioning (MODVERSIONS)"
+          sed -i 's/CONFIG_MODVERSIONS=y/# CONFIG_MODVERSIONS is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
+          sed -i -E '/CONFIG_MODVERSIONS/d' arch/arm64/configs/$DEFCONFIG_NAME
+          echo "# CONFIG_MODVERSIONS is not set" >> arch/arm64/configs/$DEFCONFIG_NAME
+
+          echo "[+] Symlinking correct GNU assemblers to Clang path"
+          ln -sf /usr/bin/aarch64-linux-gnu-as $GITHUB_WORKSPACE/clang-custom/bin/as
+          ln -sf /usr/bin/aarch64-linux-gnu-as $GITHUB_WORKSPACE/clang-custom/bin/aarch64-linux-gnu-as
+          ln -sf /usr/bin/arm-linux-gnueabi-as $GITHUB_WORKSPACE/clang-custom/bin/arm-linux-gnueabi-as
+
+          echo "[+] Fixing hardcoded Oplus paths"
+          find drivers/power/oplus/ -type f \( -name "*.h" -o -name "*.c" \) -exec sed -i 's|kernel-4.14/||g' {} +
+          ln -sf $GITHUB_WORKSPACE/device_kernel $GITHUB_WORKSPACE/kernel-4.14
+
+          echo "[+] Disabling Oplus Rootguard safely"
+          cat << 'EOF_ROOT' > arch/arm64/kernel/oplus_root.S
+          /* SPDX-License-Identifier: GPL-2.0-only */
+          #include <linux/init.h>
+          #include <linux/linkage.h>
+          
+          ENTRY(oplus_root_check)
+              ldr x16, [x27, x26, lsl #3]    // Load the original requested syscall
+              br x16                         // Tail call directly into it
+          END(oplus_root_check)
+          EOF_ROOT
+
+          sed -i 's/do_group_exit(SIGKILL);/return;/g' arch/arm64/kernel/rootguard/oplus_root_check.c
+          sed -i 's/ret = kevent_send_to_user(dcs_event);/ret = 0;/g' arch/arm64/kernel/rootguard/oplus_root_check.c
+          sed -i -E '/^(struct|void|int).*vcu_/ s/^/__attribute__((weak)) /' drivers/media/platform/mtk-vcu/mtk_vcodec_mem.c   
+          
+          echo "[+] Enabling APatch and OverlayFS Kernel Requirements"
+          sed -i -E '/CONFIG_KALLSYMS|CONFIG_OVERLAY_FS|CONFIG_TMPFS_XATTR|CONFIG_TMPFS_POSIX_ACL/d' arch/arm64/configs/$DEFCONFIG_NAME
+          cat << 'EOF_OVERLAY' >> arch/arm64/configs/$DEFCONFIG_NAME
+          CONFIG_KALLSYMS=y
+          CONFIG_KALLSYMS_ALL=y
+          CONFIG_OVERLAY_FS=y
+          CONFIG_TMPFS_XATTR=y
+          CONFIG_TMPFS_POSIX_ACL=y
+          EOF_OVERLAY
+          
+          echo "[+] Disabling Module Signature Checks"
+          sed -i 's/CONFIG_MODULE_SRCVERSION_ALL=y/# CONFIG_MODULE_SRCVERSION_ALL is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
+          sed -i -E '/CONFIG_MODULE_SIG/d' arch/arm64/configs/$DEFCONFIG_NAME
+          cat << 'EOF_SIG' >> arch/arm64/configs/$DEFCONFIG_NAME
+          # CONFIG_MODULE_SRCVERSION_ALL is not set
+          # CONFIG_MODULE_SIG is not set
+          # CONFIG_MODULE_SIG_FORCE is not set
+          # CONFIG_MODULE_SIG_ALL is not set
+          EOF_SIG
+          
+          echo "[+] Fetching built-in connectivity drivers from prathsprjkt custom repo"
+          git clone --depth=1 --single-branch -b 14.0 https://github.com/prathsprjkt/android_kernel_realme_salaa.git /tmp/custom_repo
+          
+          # Delete your empty stock connectivity folder and replace it
+          rm -rf drivers/misc/mediatek/connectivity
+          cp -r /tmp/custom_repo/drivers/misc/mediatek/connectivity drivers/misc/mediatek/
+          rm -rf /tmp/custom_repo
+
+          echo "[+] Fixing Header Include Formatting styles in new drivers"
+          sed -i 's|#include <pinctrl-mtk-common-v2_debug.h>|#include "pinctrl-mtk-common-v2_debug.h"|g' drivers/misc/mediatek/connectivity/common/connectivity_build_in_adapter.c
+          sed -i 's|#include <mtk_pmic_api_buck.h>|#include "mtk_pmic_api_buck.h"|g' drivers/misc/mediatek/connectivity/common/connectivity_build_in_adapter.c
+          sed -i 's|#include <pmic_api_buck.h>|#include "pmic_api_buck.h"|g' drivers/misc/mediatek/connectivity/common/connectivity_build_in_adapter.c
+          sed -i 's|#include <upmu_common.h>|#include "upmu_common.h"|g' drivers/misc/mediatek/connectivity/common/connectivity_build_in_adapter.c
+          echo "ccflags-y += -I\$(srctree)/drivers/mmc/core" >> drivers/misc/mediatek/connectivity/Makefile
+
+          echo "[+] Forcing wireless drivers to compile directly into the kernel (Built-in)"
+          sed -i -E '/CONFIG_WLAN_DRV_BUILD_IN|CONFIG_MTK_COMBO_WIFI|CONFIG_MTK_COMBO_BT/d' arch/arm64/configs/$DEFCONFIG_NAME
+          cat << 'EOF_DEFCONFIG' >> arch/arm64/configs/$DEFCONFIG_NAME
+          CONFIG_WLAN=y
+          CONFIG_WLAN_DRV_BUILD_IN=y
+          CONFIG_MTK_COMBO_WIFI=y
+          CONFIG_MTK_COMBO_BT=y
+          EOF_DEFCONFIG
+          
+          #echo "[+] Prepending SUSFS headers safely to open.c"
+          #printf "#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\n#include <linux/susfs.h>\n#include <linux/susfs_def.h>\n#endif\n" > /tmp/open_head
+          #cat fs/open.c >> /tmp/open_head
+          #mv /tmp/open_head fs/open.c
+          
+          #echo "[+] Stripping mismatched KSU/ReSukiSU hooks to pass compiler and checkers"
+          #sed -i '/ksu_handle_newfstat_ret/d' fs/stat.c
+          #sed -i '/ksu_handle_fstat64_ret/d' fs/stat.c
+          #sed -i 's/extern bool ksu_input_hook __read_mostly;//g' drivers/input/input.c
+          #sed -i 's/if (unlikely(ksu_input_hook))//g' drivers/input/input.c
+          #sed -i 's/extern bool ksu_vfs_read_hook __read_mostly;//g' fs/read_write.c
+          #sed -i 's/if (unlikely(ksu_vfs_read_hook))//g' fs/read_write.c
+          #sed -i 's/extern bool ksu_init_rc_hook __read_mostly;//g' fs/read_write.c
+          #sed -i 's/if (unlikely(ksu_init_rc_hook))//g' fs/read_write.c
+          #sed -i 's/extern bool ksu_execveat_hook __read_mostly;//g' fs/exec.c
+          #sed -i 's/if (unlikely(ksu_execveat_hook))//g' fs/exec.c          
+          #echo "[+] KernelSU core hooks cleanly adapted!"
+          
+      - name: 🧰 Patch Kernel of Re:Kernel
+        uses: ./.github/workflows/patch-rekernel
+
+      - name: ❗ Realme 7 Rekernel Only
+        if: env.REKERNEL_ENABLE == 'true'
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel    
+          sed -i 's/return (cgroup_task_frozen(task) || cgroup_freezing(task));/return false;/g' include/net/rekernel.h
+      
+      - name: 💿 Patch Kernel of Droidspaces
+        uses: ./.github/workflows/patch-droidspaces
+
+      - name: 🔒 Patch Kernel of Baseband Guard
+        uses: ./.github/workflows/patch-baseband-guard
+
+      - name: ❗ Realme 7 BBG Only
+        if: env.BASEBAND_GUARD_ENABLE == 'true'
+        shell: bash
+        run: |
+          # Only ${{ env.DEVICE_NAME }} use it.
+          cd $GITHUB_WORKSPACE/device_kernel
+          sed -i "s|grep -q '#define DEFINE_LSM(lsm)'|grep -q '\\\#define DEFINE_LSM(lsm)'|" security/selinux/Makefile
+          echo "[+] Fixed BBG"
+          
+      - name: 📦 Archive Patched Files for Review
+        if: always()
+        run: |
+          cd $GITHUB_WORKSPACE/device_kernel
+          mkdir -p $GITHUB_WORKSPACE/patched_files
+          
+          echo "[+] Gathering modified files..."
+          git status -s | grep -E '^( M|M |A |A|AM|MM|\?\?)' | awk '{print $2}' | while read file; do
+            if [ -f "$file" ]; then
+              mkdir -p "$GITHUB_WORKSPACE/patched_files/$(dirname "$file")"
+              cp "$file" "$GITHUB_WORKSPACE/patched_files/$file"
+            fi
+          done
+          
+          echo "[+] Gathering KernelSU directory..."
+          if [ -d "drivers/kernelsu" ]; then
+            mkdir -p $GITHUB_WORKSPACE/patched_files/drivers
+            # Use -rL to copy the actual files instead of the symlink shortcut!
+            cp -rL drivers/kernelsu $GITHUB_WORKSPACE/patched_files/drivers/
+          fi
+          
+          echo "[+] Gathering reject files (if any)..."
+          find . -name "*.rej" -exec cp --parents {} $GITHUB_WORKSPACE/patched_files/ \; || true
+          
+          cd $GITHUB_WORKSPACE/patched_files
+          zip -r $GITHUB_WORKSPACE/patched_files_review.zip .
+        shell: bash
+
+      - name: 📤 Upload Patched Files Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Patched-Files-Review
+          path: ${{ github.workspace }}/patched_files_review.zip
+        
+      - name: 🚀 Build Process
+        uses: ./.github/workflows/build-process
+
+      - name: 🔩 Pack Process
+        uses: ./.github/workflows/pack-process
+
+      - name: ✏️ Upload Artifacts
+        uses: ./.github/workflows/upload-files
