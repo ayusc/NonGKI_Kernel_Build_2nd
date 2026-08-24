@@ -47,8 +47,8 @@ env:
   AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
   AK3_BRANCH : "master"
 
-  # Replace with stock boot.img URL for Realme 7 Android 12
-  BOOT_SOURCE : "" 
+  # Replace with stock boot.img url for Realme 7 Android 12
+  BOOT_SOURCE : "https://github.com/ayusc/NonGKI_Kernel_Build_2nd/releases/download/realme7/boot.img" 
 
   NEED_DTBO : false
   NEED_SAFE_DTBO : false
@@ -226,23 +226,23 @@ jobs:
           CONFIG_MTK_COMBO_BT=y
           EOF_DEFCONFIG
           
-          echo "[+] Prepending SUSFS headers safely to open.c"
-          printf "#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\n#include <linux/susfs.h>\n#include <linux/susfs_def.h>\n#endif\n" > /tmp/open_head
-          cat fs/open.c >> /tmp/open_head
-          mv /tmp/open_head fs/open.c
+          #echo "[+] Prepending SUSFS headers safely to open.c"
+          #printf "#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\n#include <linux/susfs.h>\n#include <linux/susfs_def.h>\n#endif\n" > /tmp/open_head
+          #cat fs/open.c >> /tmp/open_head
+          #mv /tmp/open_head fs/open.c
           
-          echo "[+] Stripping mismatched ReSukiSU hooks to pass compiler and checkers"
-          sed -i '/ksu_handle_newfstat_ret/d' fs/stat.c
-          sed -i '/ksu_handle_fstat64_ret/d' fs/stat.c
-          sed -i 's/extern bool ksu_input_hook __read_mostly;//g' drivers/input/input.c
-          sed -i 's/if (unlikely(ksu_input_hook))//g' drivers/input/input.c
-          sed -i 's/extern bool ksu_vfs_read_hook __read_mostly;//g' fs/read_write.c
-          sed -i 's/if (unlikely(ksu_vfs_read_hook))//g' fs/read_write.c
-          sed -i 's/extern bool ksu_init_rc_hook __read_mostly;//g' fs/read_write.c
-          sed -i 's/if (unlikely(ksu_init_rc_hook))//g' fs/read_write.c
-          sed -i 's/extern bool ksu_execveat_hook __read_mostly;//g' fs/exec.c
-          sed -i 's/if (unlikely(ksu_execveat_hook))//g' fs/exec.c          
-          echo "[+] KernelSU core hooks cleanly adapted!"
+          #echo "[+] Stripping mismatched ReSukiSU hooks to pass compiler and checkers"
+          #sed -i '/ksu_handle_newfstat_ret/d' fs/stat.c
+          #sed -i '/ksu_handle_fstat64_ret/d' fs/stat.c
+          #sed -i 's/extern bool ksu_input_hook __read_mostly;//g' drivers/input/input.c
+          #sed -i 's/if (unlikely(ksu_input_hook))//g' drivers/input/input.c
+          #sed -i 's/extern bool ksu_vfs_read_hook __read_mostly;//g' fs/read_write.c
+          #sed -i 's/if (unlikely(ksu_vfs_read_hook))//g' fs/read_write.c
+          #sed -i 's/extern bool ksu_init_rc_hook __read_mostly;//g' fs/read_write.c
+          #sed -i 's/if (unlikely(ksu_init_rc_hook))//g' fs/read_write.c
+          #sed -i 's/extern bool ksu_execveat_hook __read_mostly;//g' fs/exec.c
+          #sed -i 's/if (unlikely(ksu_execveat_hook))//g' fs/exec.c          
+          #echo "[+] KernelSU core hooks cleanly adapted!"
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
