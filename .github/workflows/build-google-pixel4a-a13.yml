@@ -70,6 +70,7 @@ env:
 
   REKERNEL_ENABLE: "false" # if u need Re:Kernel.
   DROIDSPACES_ENABLE: "false" # if u need Droidspaces or LXC/Docker.
+  NOMOUNT_ENABLE: "true" # if u need NoMount.
 
   HOOK_METHOD: "syscall" # Manual hook method -> syscall.
 
@@ -170,19 +171,19 @@ jobs:
           sed -i 's/CONFIG_INCREMENTAL_FS=m/CONFIG_INCREMENTAL_FS=y/g' arch/arm64/configs/$DEFCONFIG_NAME
 
           # 1. Fix drivers/input/input.c
-          sed -i '/extern bool ksu_input_hook __read_mostly;/d' drivers/input/input.c
-          sed -i '/if (unlikely(ksu_input_hook))/d' drivers/input/input.c
+          #sed -i '/extern bool ksu_input_hook __read_mostly;/d' drivers/input/input.c
+          #sed -i '/if (unlikely(ksu_input_hook))/d' drivers/input/input.c
         
           # 2. Fix fs/read_write.c
-          sed -i '/extern bool ksu_init_rc_hook __read_mostly;/d' fs/read_write.c
-          sed -i '/if (unlikely(ksu_init_rc_hook))/d' fs/read_write.c
+          #sed -i '/extern bool ksu_init_rc_hook __read_mostly;/d' fs/read_write.c
+          #sed -i '/if (unlikely(ksu_init_rc_hook))/d' fs/read_write.c
 
           # 1. Neutralize the missing SuSFS open redirect hook
-          sed -i '/extern\|#define/! s/SUSFS_IS_INODE_OPEN_REDIRECT_WITHOUT_UID_CHECK/0 \&\& /g' fs/open.c
+          #sed -i '/extern\|#define/! s/SUSFS_IS_INODE_OPEN_REDIRECT_WITHOUT_UID_CHECK/0 \&\& /g' fs/open.c
           
           # 2. Neutralize the missing SuSFS stat hooks
-          sed -i '/extern\|#define/! s/ksu_handle_newfstat_ret/0 \&\& /g' fs/stat.c
-          sed -i '/extern\|#define/! s/ksu_handle_fstat64_ret/0 \&\& /g' fs/stat.c
+          #sed -i '/extern\|#define/! s/ksu_handle_newfstat_ret/0 \&\& /g' fs/stat.c
+          #sed -i '/extern\|#define/! s/ksu_handle_fstat64_ret/0 \&\& /g' fs/stat.c
 
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
