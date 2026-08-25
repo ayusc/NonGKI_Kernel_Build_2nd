@@ -112,6 +112,7 @@ jobs:
 
       - name: 🛠️ Setup Container Environment
         run: |
+          echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/90assumeyes
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -y
           apt-get remove -y g++-multilib gcc-multilib || true
