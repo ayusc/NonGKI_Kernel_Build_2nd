@@ -41,8 +41,8 @@ env:
   KERNELSU_AUTO_GET : "true" # if u want easy setting kernelsu, u can true.
   KERNELSU_AUTO_FORK : "resukisu" # xxksu, rsuntk, next, resukisu and sukisu
 
-  SUSFS_ENABLE : "false"
-  SUSFS_FIXED : "false"
+  SUSFS_ENABLE : "true"
+  SUSFS_FIXED : "true"
 
   AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
   AK3_BRANCH : "master"
@@ -162,9 +162,9 @@ jobs:
           sed -i 's/.*LINUX_COMPILER.*/echo "#define LINUX_COMPILER \\"Proton Clang 13\\""/g' scripts/mkcompile_h
           # Patch Makefile to suppress unknown warnings and GNU layout structures
           echo "[+] Patching Makefile"
-          echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
-          echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
-          echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
+          #echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
+          #echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
+          #echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           
           # Fix missing haptic function causing build failure
           echo "[+] Fix a critical bug"
