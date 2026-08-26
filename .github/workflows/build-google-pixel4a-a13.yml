@@ -162,9 +162,9 @@ jobs:
           sed -i 's/.*LINUX_COMPILER.*/echo "#define LINUX_COMPILER \\"Proton Clang 13\\""/g' scripts/mkcompile_h
           # Patch Makefile to suppress unknown warnings and GNU layout structures
           echo "[+] Patching Makefile"
-          #echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
-          #echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
-          #echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
+          echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option" >> Makefile
+          echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option" >> Makefile
+          echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option" >> Makefile
           
           # Fix missing haptic function causing build failure
           echo "[+] Fix a critical bug"
