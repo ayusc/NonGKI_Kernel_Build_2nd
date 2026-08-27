@@ -1,9 +1,11 @@
 #!/bin/bash
 # Patches author: simonpunk @ Gitlab
 #                 backslashxx @ Github
-# Shell author: JackA1ltman <cs2dtzq@163.com>
+# Shell authon: JackA1ltman <cs2dtzq@163.com>
 # Tested kernel versions: 5.4, 4.19, 4.14, 4.9, 4.4, 3.18
-# Updated Fix: Corrected sed brace escaping for exec.c, open.c, stat.c
+# 20251120
+
+# This Hook is only available for SuSFS v2.1.00 onwards.
 
 patch_files=(
     fs/exec.c
@@ -55,8 +57,7 @@ for i in "${patch_files[@]}"; do
         else
             sed -i '/^static int do_execveat_common(int fd, struct filename \*filename,/i\#ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_su_compat_enabled;\nextern struct static_key_true susfs_is_sdcard_android_data_not_decrypted;\nextern bool __ksu_is_allow_uid_for_current(uid_t uid);\nextern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv,\n\t\t\tvoid *envp, int *flags);\nextern int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,\n\t\t\t\t void *argv, void *envp, int *flags);\n#endif\n' fs/exec.c
         fi
-
-        sed -i '/return PTR_ERR(filename);/a\'"#ifdef CONFIG_KSU_SUSFS\n\tif (likely(susfs_is_current_proc_no_su()))\n\t\tgoto orig_flow;\n\tif (static_branch_likely(&ksu_su_compat_enabled)) {\n\t\tif (static_branch_unlikely(&susfs_is_sdcard_android_data_not_decrypted))\n\t\t\tksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);\n\t\telse\n\t\t\tksu_handle_execveat_sucompat(&fd, &filename, &argv, &envp, &flags);\n\t}\norig_flow:\n#endif" fs/exec.c
+        sed -i '/return PTR_ERR(filename);/a\#ifdef CONFIG_KSU_SUSFS\n\tif (likely(susfs_is_current_proc_no_su()))\n\t\tgoto orig_flow;\n\tif (static_branch_likely(&ksu_su_compat_enabled)) {\n\t\tif (static_branch_unlikely(\&susfs_is_sdcard_android_data_not_decrypted))\n\t\tksu_handle_execveat(\&fd, \&filename, \&argv, \&envp, \&flags);\n\telse\n\t\tksu_handle_execveat_sucompat(\&fd, \&filename, \&argv, \&envp, \&flags);\n\t}\norig_flow:\n#endif' fs/exec.c
 
         if grep -q "ksu_handle_execveat_sucompat" "fs/exec.c"; then
             echo "[+] fs/exec.c Patched!"
@@ -71,12 +72,13 @@ for i in "${patch_files[@]}"; do
     fs/open.c)
         sed -i '/#include <linux\/compat.h>/a #ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif' fs/open.c
         if grep -q "do_faccessat" "fs/open.c" >/dev/null 2>&1; then
-            sed -i '/long do_faccessat(int dfd, const char __user \*filename, int mode)/i #ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_su_compat_enabled;\nextern bool __ksu_is_allow_uid_for_current(uid_t uid);\nextern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,\n\t\t\tint *flags);\n#endif' fs/open.c
+            sed -i '/long do_faccessat(int dfd, const char __user \*filename, int mode)/i #ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_su_compat_enabled;\nextern bool __ksu_is_allow_uid_for_current(uid_t uid);\nextern int ksu_handle_faccessat(int *dfd, struct filename **filename, int *mode,\n\t\t\tint *flags);\n#endif' fs/open.c
         else
-            sed -i '/SYSCALL_DEFINE3(faccessat/i #ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_su_compat_enabled;\nextern bool __ksu_is_allow_uid_for_current(uid_t uid);\nextern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,\n             int *flags);\n#endif' fs/open.c
+            sed -i '/SYSCALL_DEFINE3(faccessat/i #ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_su_compat_enabled;\nextern bool __ksu_is_allow_uid_for_current(uid_t uid);\nextern int ksu_handle_faccessat(int *dfd, struct filename **filename, int *mode,\n             int *flags);\n#endif' fs/open.c
         fi
-
-        sed -i '/if (mode & ~S_IRWXO)/i\'"#ifdef CONFIG_KSU_SUSFS\n\tif (likely(susfs_is_current_proc_no_su()))\n\t\tgoto orig_flow;\n\tif (static_branch_likely(&ksu_su_compat_enabled)) {\n\t\tif (unlikely(__ksu_is_allow_uid_for_current(current_uid().val))) {\n\t\t\tksu_handle_faccessat(&dfd, &filename, &mode, NULL);\n\t\t}\n\t}\norig_flow:\n#endif" fs/open.c
+        sed -i '/if (mode & ~S_IRWXO)/i\#ifdef CONFIG_KSU_SUSFS\n\tstruct filename *fname = NULL;\n#endif\n' fs/open.c
+        sed -i '/res = user_path_at(dfd, filename, lookup_flags, \&path);/i\#ifdef CONFIG_KSU_SUSFS\n\tfname = getname_flags(filename, lookup_flags, NULL);\n\n\tif (likely(susfs_is_current_proc_no_su()))\n\t\tgoto orig_flow;\n\n\tif (static_branch_likely(\&ksu_su_compat_enabled)) {\n\t\tif (unlikely(__ksu_is_allow_uid_for_current(current_uid().val)))\n\t\t\tksu_handle_faccessat(\&dfd, \&fname, \&mode, NULL);\n\t}\n\norig_flow:\n\tres = filename_lookup(dfd, fname, lookup_flags, \&path, NULL);\n\t\/\/ no putname(fname) here as filename_lookup() has it done for us already;\n#else' fs/open.c
+        sed -i '/res = user_path_at(dfd, filename, lookup_flags, \&path);/a\#endif' fs/open.c
 
         if grep -q "ksu_handle_faccessat" "fs/open.c"; then
             echo "[+] fs/open.c Patched!"
@@ -114,31 +116,35 @@ for i in "${patch_files[@]}"; do
             sed -i '/#include <asm\/unistd.h>/a\#ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif' fs/stat.c
         elif ! grep -q "susfs_def.h" "fs/stat.c"; then
             if grep -q "vmalloc.h" "fs/stat.c"; then
-                sed -i '/#include <linux\/vmalloc.h>/a\#ifdef CONFIG_KSU_SUSFS\n#include <linux/susfs_def.h>\n#endif' fs/stat.c
+                sed -i '/#include <linux\/vmalloc.h>/a\#ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif' fs/stat.c
             else
-                sed -i '/#include <asm\/uaccess.h>/i #ifdef CONFIG_KSU_SUSFS\n#include <linux/susfs_def.h>\n#endif' fs/stat.c
+                sed -i '/#include <asm\/uaccess.h>/i #ifdef CONFIG_KSU_SUSFS\n#include <linux\/susfs_def.h>\n#endif' fs/stat.c
             fi
         fi
 
         if grep -q "vfs_statx_fd" "fs/stat.c"; then
             sed -i '/int vfs_statx_fd(unsigned int fd, struct kstat \*stat,/i\#ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_is_init_rc_hook_enabled;\nextern void ksu_handle_vfs_fstat(int fd, loff_t *kstat_size_ptr);\n#endif \/\/ #ifdef CONFIG_KSU_SUSFS\n' fs/stat.c
+
         elif grep -q "vfs_fstat" "fs/stat.c"; then
             sed -i '/int vfs_fstat(unsigned int fd, struct kstat \*stat)/i\#ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_is_init_rc_hook_enabled;\nextern void ksu_handle_vfs_fstat(int fd, loff_t *kstat_size_ptr);\n#endif \/\/ #ifdef CONFIG_KSU_SUSFS\n' fs/stat.c
+
         else
             echo "[-] Kernel have no vfs_statx_fd and vfs_fstat."
         fi
 
         if grep -q "vfs_statx" "fs/stat.c"; then
-            sed -i '/^int vfs_statx(int dfd, const char __user \*filename, int flags,/i\#ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_su_compat_enabled;\nextern bool __ksu_is_allow_uid_for_current(uid_t uid);\nextern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);\n#endif\n' fs/stat.c
-            sed -i '/if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |/i\'"#ifdef CONFIG_KSU_SUSFS\n\tif (likely(susfs_is_current_proc_no_su()))\n\t\tgoto orig_flow;\n\tif (static_branch_likely(&ksu_su_compat_enabled)) {\n\t\tif (unlikely(__ksu_is_allow_uid_for_current(current_uid().val)))\n\t\t\tksu_handle_stat(&dfd, &filename, &flags);\n\t}\norig_flow:\n#endif" fs/stat.c
+            sed -i '/^int vfs_statx(int dfd, const char __user \*filename, int flags,/i\#ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_su_compat_enabled;\nextern bool __ksu_is_allow_uid_for_current(uid_t uid);\nextern int ksu_handle_stat(int *dfd, struct filename **filename, int *flags);\n#endif\n' fs/stat.c
 
         elif grep -q "vfs_fstatat" "fs/stat.c"; then
-            sed -i '/^int vfs_fstatat(int dfd, const char __user \*filename, struct kstat \*stat,/i\#ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_su_compat_enabled;\nextern bool __ksu_is_allow_uid_for_current(uid_t uid);\nextern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);\n#endif\n' fs/stat.c
-            sed -i '/if ((flag & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |/i\'"#ifdef CONFIG_KSU_SUSFS\n\tif (likely(susfs_is_current_proc_no_su()))\n\t\tgoto orig_flow;\n\tif (static_branch_likely(&ksu_su_compat_enabled)) {\n\t\tif (unlikely(__ksu_is_allow_uid_for_current(current_uid().val)))\n\t\t\tksu_handle_stat(&dfd, &filename, &flag);\n\t}\norig_flow:\n#endif" fs/stat.c
+            sed -i '/^int vfs_fstatat(int dfd, const char __user \*filename, struct kstat \*stat,/i\#ifdef CONFIG_KSU_SUSFS\nextern struct static_key_true ksu_su_compat_enabled;\nextern bool __ksu_is_allow_uid_for_current(uid_t uid);\nextern int ksu_handle_stat(int *dfd, struct filename **filename, int *flags);\n#endif\n' fs/stat.c
+
         else
             echo "[-] Kernel have no vfs_statx and vfs_fstatat."
         fi
 
+        sed -i '/if ((flags & ~(AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT |/i\#ifdef CONFIG_KSU_SUSFS\n\tstruct filename *fname = NULL;\n#endif\n' fs/stat.c
+        sed -i '/error = user_path_at(dfd, filename, lookup_flags, \&path);/i\#ifdef CONFIG_KSU_SUSFS\n\tfname = getname_flags(filename, lookup_flags, NULL);\n\n\tif (likely(susfs_is_current_proc_no_su()))\n\t\tgoto orig_flow;\n\n\tif (static_branch_likely(\&ksu_su_compat_enabled)) {\n\t\tif (unlikely(__ksu_is_allow_uid_for_current(current_uid().val)))\n\t\t\tksu_handle_stat(\&dfd, \&fname, \&flags);\n\t}\n\norig_flow:\n\terror = filename_lookup(dfd, fname, lookup_flags, \&path, NULL);\n\t\/\/ no putname(fname) here as filename_lookup() has it done for us already;\n#else' fs/stat.c
+        sed -i '/error = user_path_at(dfd, filename, lookup_flags, \&path);/a\#endif' fs/stat.c
         sed -i '/fdput(f);/i\#ifdef CONFIG_KSU_SUSFS\n\t\tif (static_branch_unlikely(\&ksu_is_init_rc_hook_enabled))\n\t\t\tksu_handle_vfs_fstat(fd, \&stat->size);\n#endif \/\/ #ifdef CONFIG_KSU_SUSFS\n' fs/stat.c
 
         if grep -q "ksu_handle_stat" "fs/stat.c"; then
@@ -176,7 +182,7 @@ for i in "${patch_files[@]}"; do
     # drivers/ changes
     ## input/input.c
     drivers/input/input.c)
-        sed -i '/^static void input_handle_event(struct input_dev \*dev,/i\#if defined(CONFIG_KSU) || defined(CONFIG_KSU_SUSFS)\nextern struct static_key_true ksu_is_input_hook_enabled;\nextern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code, int *value);\n#endif\n' drivers/input/input.c
+        sed -i '/^static void input_handle_event(struct input_dev \*dev,/i\#ifdef CONFIG_KSU\nextern struct static_key_true ksu_is_input_hook_enabled;\nextern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code, int *value);\n#endif\n' drivers/input/input.c
         sed -i '/input_get_disposition(dev, type, code, \&value);/a\#ifdef CONFIG_KSU_SUSFS\n\tif (static_branch_unlikely(\&ksu_is_input_hook_enabled))\n\t\tksu_handle_input_handle_event(\&type, \&code, \&value);\n#endif\n' drivers/input/input.c
 
         if grep -q "ksu_handle_input_handle_event" "drivers/input/input.c"; then
@@ -193,7 +199,7 @@ for i in "${patch_files[@]}"; do
     ## security.c
     security/security.c)
         if [ "$FIRST_VERSION" -lt 4 ] && [ "$SECOND_VERSION" -lt 19 ]; then
-            sed -i '/int security_binder_set_context_mgr(struct task_struct/i \#ifdef CONFIG_KSU\nextern int ksu_bprm_check(struct linux_binprm *bprm);\nextern int ksu_handle_rename(struct dentry *old_dentry, struct dentry *new_dentry);\nextern int ksu_handle_setuid(struct cred *new, const struct cred *old);\n#endif' security/security.c
+            sed -i '/int security_binder_set_context_mgr(struct task_struct/i \#ifdef CONFIG_KSU\n\extern int ksu_bprm_check(struct linux_binprm *bprm);\n\extern int ksu_handle_rename(struct dentry *old_dentry, struct dentry *new_dentry);\n\extern int ksu_handle_setuid(struct cred *new, const struct cred *old);\n\#endif' security/security.c
             sed -i '/ret = security_ops->bprm_check_security(bprm);/i \#ifdef CONFIG_KSU\n\tksu_bprm_check(bprm);\n\#endif' security/security.c
             sed -i '/if (unlikely(IS_PRIVATE(old_dentry->d_inode) ||/i \#ifdef CONFIG_KSU\n\tksu_handle_rename(old_dentry, new_dentry);\n\#endif' security/security.c
             sed -i '/return security_ops->task_fix_setuid(new, old, flags);/i \#ifdef CONFIG_KSU\n\tksu_handle_setuid(new, old);\n\#endif' security/security.c
