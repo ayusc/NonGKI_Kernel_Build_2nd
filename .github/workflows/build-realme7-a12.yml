@@ -69,7 +69,7 @@ env:
   SUSFS_FOLDER_FIXED: "realme7" # Fill in your patch prefix directory here. 
   SUSFS_PATCH_FIXED: "susfs_fixed" # Fill in your patches here.
 
-  REKERNEL_ENABLE: "true" # if u need Re:Kernel.
+  REKERNEL_ENABLE: "false" # if u need Re:Kernel.
   DROIDSPACES_ENABLE: "false" # if u need Droidspaces or LXC/Docker.
   NOMOUNT_ENABLE: "true" # if u need NoMount.
 
@@ -82,7 +82,7 @@ env:
   KPM_KPATCH_NEXT: "false" # If u want hook KPatch-Next in build step.
   KPM_PATCH_SOURCE: ""
 
-  BASEBAND_GUARD_ENABLE: "true" # if u want prevent unauthorized writes to critical partitions/device nodes.
+  BASEBAND_GUARD_ENABLE: "false" # if u want prevent unauthorized writes to critical partitions/device nodes.
   BASEBAND_GUARD_BOOT: "false" # if u want to protect boot partition.
 
   GENERATE_DTB: "false" # if u kernel need DTB , but cannot auto generate it. (Only Anykernel3).
