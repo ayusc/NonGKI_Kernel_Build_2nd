@@ -56,7 +56,7 @@ env:
   ROM_TEXT : "stock_a12" # Latest stock for Realme 7 is Android 12
 
   # Other env
-  PYTHON_VERSION: "2" # Only 2(Ubuntu 22.04 and Ubuntu 20.04) or 3(Any OS Versions).
+  PYTHON_VERSION: "3" # Only 2(Ubuntu 22.04 and Ubuntu 20.04) or 3(Any OS Versions).
 
   PACK_METHOD: "Anykernel3" # Anykernel3 need SOURCE and BRANCH, MKBOOTIMG needn't it.
   PACK_KMODULES: "false" # if u want pack kernel modules (.ko) into Anykernel3.
@@ -69,7 +69,7 @@ env:
   SUSFS_FOLDER_FIXED: "realme7" # Fill in your patch prefix directory here. 
   SUSFS_PATCH_FIXED: "susfs_fixed" # Fill in your patches here.
 
-  REKERNEL_ENABLE: "false" # if u need Re:Kernel.
+  REKERNEL_ENABLE: "true" # if u need Re:Kernel.
   DROIDSPACES_ENABLE: "false" # if u need Droidspaces or LXC/Docker.
   NOMOUNT_ENABLE: "true" # if u need NoMount.
 
