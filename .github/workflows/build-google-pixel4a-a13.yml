@@ -47,7 +47,7 @@ env:
   AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
   AK3_BRANCH : "master"
 
-  BOOT_SOURCE : "https://github.com/ayusc/NonGKI_Kernel_Build_2nd/releases/download/1234/pixel.4a.boot.img"
+  BOOT_SOURCE : ""
 
   NEED_DTBO : false
   NEED_SAFE_DTBO : false
@@ -154,14 +154,14 @@ jobs:
           sed -i '/CONFIG_CC_STACKPROTECTOR/d' arch/arm64/configs/$DEFCONFIG_NAME
           echo "# CONFIG_CC_STACKPROTECTOR_STRONG is not set" >> arch/arm64/configs/$DEFCONFIG_NAME
           echo "CONFIG_CC_STACKPROTECTOR_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
-          echo "[+] Forcing kernel version string"
+          echo "[+] Fix kernel version string"
           echo '#!/bin/sh' > scripts/setlocalversion
           chmod +x scripts/setlocalversion
           sed -i 's/CONFIG_LOCALVERSION_AUTO=y/# CONFIG_LOCALVERSION_AUTO is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
           echo "[+] Fixing compiler version"
           sed -i 's/.*LINUX_COMPILER.*/echo "#define LINUX_COMPILER \\"Proton Clang 13\\""/g' scripts/mkcompile_h
           # Patch Makefile to suppress unknown warnings and GNU layout structures
-          echo "[+] Patching Makefile"
+          echo "[+] Patching Makefile to bypass errors"
           echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
