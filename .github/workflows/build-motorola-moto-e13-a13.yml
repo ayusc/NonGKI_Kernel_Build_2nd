@@ -14,21 +14,20 @@ env:
   DEVICE_NAME : "motorola_moto_e13"
   DEVICE_CODENAME : "sabahlite"
 
-  CUSTOM_CMDS : "CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- CROSS_COMPILE_COMPAT=arm-linux-gnueabi-"
-  EXTRA_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip READELF=llvm-readelf HOSTCC=clang HOSTCXX=clang++"
-
+  CUSTOM_CMDS : "CLANG_TRIPLE=aarch64-linux-gnu-"
+  EXTRA_CMDS : "LD=ld.lld"
+  
   KERNEL_SOURCE : "https://github.com/MotorolaMobilityLLC/kernel-sprd.git"
   KERNEL_BRANCH : "MMI-TLA33.105-226-2"
 
-  # Proton Clang (Clang 13)
-  CLANG_SOURCE : "https://github.com/kdrag0n/proton-clang.git"
-  CLANG_BRANCH : "master"
+  CLANG_SOURCE : "https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b.git"
+  CLANG_BRANCH : "lineage-20.0"
 
-  GCC_GNU : true
-  GCC_64_SOURCE : ""
-  GCC_64_BRANCH : ""
-  GCC_32_SOURCE : ""
-  GCC_32_BRANCH : ""
+  GCC_GNU : false
+  GCC_64_SOURCE : "https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9.git"
+  GCC_64_BRANCH : "android12L-release"
+  GCC_32_SOURCE : "https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9.git"
+  GCC_32_BRANCH : "android12L-release"
 
   DEFCONFIG_SOURCE: ""
   DEFCONFIG_NAME : "sprd_qogirl6_defconfig"
@@ -97,7 +96,7 @@ env:
 
 jobs:
   build-kernel:
-    name: Google Pixel 4a
+    name: Motorola Moto E13
     runs-on: ubuntu-latest # u can changed to ubuntu 22.04, and need container set ubuntu-latest
     container: ubuntu:focal # if u need use arch linux -> archlinux/archlinux:latest or ubuntu 20.04 -> ubuntu:focal
     env:
@@ -109,22 +108,6 @@ jobs:
     steps:
       - name: ⏰ Checkout repository
         uses: actions/checkout@v6
-
-      - name: 🛠️ Setup Container Environment
-        run: |
-          echo 'APT::Get::Assume-Yes "true";' > /etc/apt/apt.conf.d/90assumeyes
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update -y
-          apt-get remove -y g++-multilib gcc-multilib || true
-          apt-get autoremove -y || true
-          apt-get install -y --no-install-recommends \
-            sudo git wget ca-certificates \
-            binutils-aarch64-linux-gnu gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi \
-            device-tree-compiler python3 python3-setuptools python-is-python3 \
-            bc flex bison libssl-dev libelf-dev libncurses5 libtinfo5 \
-            libc6-dev libncurses-dev lz4 zip unzip
-          git config --global --add safe.directory '*'
-        shell: bash
 
       - name: ⌛️ Compilation environment preparation
         uses: ./.github/workflows/build-env
