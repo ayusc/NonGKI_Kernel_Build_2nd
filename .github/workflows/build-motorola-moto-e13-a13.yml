@@ -137,8 +137,6 @@ jobs:
 
       - name: 🔗 Patch for no-kprobe
         uses: ./.github/workflows/patch-no-kprobe
-
-      - name: 🪛 Extra Kernel Options
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
@@ -149,7 +147,7 @@ jobs:
       - name: 🔒 Patch Kernel of Baseband Guard
         uses: ./.github/workflows/patch-baseband-guard
 
-      - name: ❗ Pixel 4a BBG Only
+      - name: ❗ Moto E13 BBG Only
         if: env.BASEBAND_GUARD_ENABLE == 'true'
         shell: bash
         run: |
