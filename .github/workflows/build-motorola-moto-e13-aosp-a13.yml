@@ -1,4 +1,4 @@
-name: Build Motorola Moto E13 (Stock A13)
+name: Build Motorola Moto E13 (AOSP Based A13)
 
 on:
   workflow_call:
@@ -7,7 +7,7 @@ on:
     branches:
       - mainline
     paths:
-      - '.github/workflows/build-motorola-moto-e13-a13.yml'
+      - '.github/workflows/build-motorola-moto-e13-aosp-a13.yml'
 
 env:
   # Device env
