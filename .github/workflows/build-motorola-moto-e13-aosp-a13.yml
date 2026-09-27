@@ -91,7 +91,7 @@ env:
   BUILD_OTHER_CONFIG: "false"
   MERGE_CONFIG_FILES: ""
 
-  FREE_MORE_SPACE: "true"
+  FREE_MORE_SPACE: "false"
 
 jobs:
   build-kernel:
@@ -126,6 +126,18 @@ jobs:
           echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
+          echo "[+] Disabling LTO to prevent OOM"
+          sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
+          echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
+          echo "[+] Enabling OverlayFS and Mount Kernel Requirements"
+          sed -i -E '/CONFIG_KALLSYMS|CONFIG_OVERLAY_FS|CONFIG_TMPFS_XATTR|CONFIG_TMPFS_POSIX_ACL/d' arch/arm64/configs/$DEFCONFIG_NAME
+          cat << 'EOF' >> arch/arm64/configs/$DEFCONFIG_NAME
+          CONFIG_KALLSYMS=y
+          CONFIG_KALLSYMS_ALL=y
+          CONFIG_OVERLAY_FS=y
+          CONFIG_TMPFS_XATTR=y
+          CONFIG_TMPFS_POSIX_ACL=y
+          EOF
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
