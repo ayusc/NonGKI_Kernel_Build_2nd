@@ -67,9 +67,9 @@ env:
   SUSFS_FOLDER_FIXED: ""
   SUSFS_PATCH_FIXED: ""
 
-  REKERNEL_ENABLE: "false"
+  REKERNEL_ENABLE: "true"
   DROIDSPACES_ENABLE: "false"
-  NOMOUNT_ENABLE: "false"
+  NOMOUNT_ENABLE: "true"
 
   HOOK_METHOD: "syscall"
   KERNEL_PATCH: "false"
@@ -91,7 +91,7 @@ env:
   BUILD_OTHER_CONFIG: "false"
   MERGE_CONFIG_FILES: ""
 
-  FREE_MORE_SPACE: "false"
+  FREE_MORE_SPACE: "true"
 
 jobs:
   build-kernel:
@@ -105,15 +105,7 @@ jobs:
 
     steps:
       - name: ⏰ Checkout repository
-        uses: actions/checkout@v4
-
-      - name: ⌛️ Ensure node devices exist
-        shell: bash
-        run: |
-          if [ ! -c /dev/null ]; then
-            sudo rm -f /dev/null
-            sudo mknod -m 666 /dev/null c 1 3
-          fi
+        uses: actions/checkout@v6
 
       - name: ⌛️ Compilation environment preparation
         uses: ./.github/workflows/build-env
@@ -126,6 +118,14 @@ jobs:
 
       - name: 🔗 Patch for no-kprobe
         uses: ./.github/workflows/patch-no-kprobe
+
+      - name: 🪛 Extra Kernel Options
+        run: |
+          # Only ${{ env.DEVICE_NAME }} use it.            
+          echo "[+] Patching Makefile to bypass errors"
+          echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
+          echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
+          echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           
       - name: 🧰 Patch Kernel of Re:Kernel
         uses: ./.github/workflows/patch-rekernel
@@ -136,14 +136,6 @@ jobs:
       - name: 🔒 Patch Kernel of Baseband Guard
         uses: ./.github/workflows/patch-baseband-guard
 
-      - name: ❗ Moto E13 BBG Only
-        if: env.BASEBAND_GUARD_ENABLE == 'true'
-        shell: bash
-        run: |
-          cd $GITHUB_WORKSPACE/device_kernel
-          echo "[+] Fixed BBG"
-          sed -i "s|grep -q '#define DEFINE_LSM(lsm)'|grep -q '\\\#define DEFINE_LSM(lsm)'|" security/selinux/Makefile
-      
       - name: 📦 Archive Patched Files for Review
         run: |
           cd $GITHUB_WORKSPACE/device_kernel
