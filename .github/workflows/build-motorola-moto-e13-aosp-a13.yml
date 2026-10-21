@@ -36,6 +36,7 @@ env:
 
   KERNELSU_SOURCE : ""
   KERNELSU_BRANCH : ""
+  KERNEL_SOURCE_ZIP: "https://github.com/MotorolaMobilityLLC/kernel-sprd/archive/refs/tags/MMI-TLAS33.105-290-7.zip"
 
   KERNELSU_AUTO_GET : "true"
   KERNELSU_AUTO_FORK : "resukisu"
