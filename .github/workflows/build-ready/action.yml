@@ -7,28 +7,44 @@ runs:
         shell: bash
         run: |
           cd $GITHUB_WORKSPACE
+          echo "::group::[+] Fetching kernel source code ..."
 
-          echo "::group::[+] Starting git clone kernel source code..."
-          git clone --recursive "${{ env.KERNEL_SOURCE }}" -b "${{ env.KERNEL_BRANCH }}" device_kernel --depth=1
+          if [[ -n "${{ env.KERNEL_SOURCE_ZIP }}" ]]; then
+            echo "[+] KERNEL_SOURCE_ZIP is provided: ${{ env.KERNEL_SOURCE_ZIP }}"
+            echo "[+] Downloading zip archive..."
+            wget -qO kernel_src.zip "${{ env.KERNEL_SOURCE_ZIP }}"
 
-          if [[ -f "device_kernel/.gitmodules" ]]; then
-            cd device_kernel
-            git submodule init
-            git submodule update
-            cd ../
-            echo "[+] Detected GitModules."
+            echo "[+] Extracting..."
+            mkdir -p temp_extract
+            unzip -q kernel_src.zip -d temp_extract
 
+            mkdir -p device_kernel
+            shopt -s dotglob
+            mv temp_extract/*/* device_kernel/
+            shopt -u dotglob
+
+            rm -rf temp_extract kernel_src.zip
+            echo "[+] Kernel source code extracted into device_kernel."
+          else
+            echo "[+] KERNEL_SOURCE_ZIP not set. Cloning via git..."
+            git clone --recursive "${{ env.KERNEL_SOURCE }}" -b "${{ env.KERNEL_BRANCH }}" device_kernel --depth=1
+            if [[ -f "device_kernel/.gitmodules" ]]; then
+              cd device_kernel
+              git submodule init
+              git submodule update
+              cd ../
+              echo "[+] Detected GitModules."
+            fi
+            echo "[+] Kernel source code is cloned."
           fi
           echo "::endgroup::"
-          echo "[+] Kernel source code is cloned."
 
           # Get Kernel Version
-
           KERNEL_VERSION=$(head -n 3 $GITHUB_WORKSPACE/device_kernel/Makefile | grep -E 'VERSION|PATCHLEVEL' | awk '{print $3}' | paste -sd '.')
           echo "KERNEL_VERSION=$(head -n 3 device_kernel/Makefile | grep -E 'VERSION|PATCHLEVEL' | awk '{print $3}' | paste -sd '.')" >> $GITHUB_ENV
           echo "FIRST_VERSION=$(echo "$KERNEL_VERSION" | awk -F '.' '{print $1}')" >> $GITHUB_ENV
           echo "SECOND_VERSION=$(echo "$KERNEL_VERSION" | awk -F '.' '{print $2}')" >> $GITHUB_ENV
-
+          
       - name: Get Kernel Arch
         shell: bash
         run: |
