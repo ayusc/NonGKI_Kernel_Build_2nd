@@ -128,6 +128,11 @@ jobs:
           echo "KBUILD_CFLAGS += -Wno-error -Wno-unknown-warning-option -Wno-gnu-variable-sized-type-not-at-end -Wno-initializer-overrides -Wno-pointer-sign -Wno-asm-operand-widths -Wno-tautological-compare -Wno-implicit-function-declaration -w" >> Makefile
           echo "KBUILD_HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
           echo "HOSTCFLAGS += -Wno-error -Wno-unknown-warning-option -w" >> Makefile
+
+          echo "[+] Forcing raw kernel Image"
+          sed -i -E 's/KBUILD_IMAGE\s*[:?]?=.*/KBUILD_IMAGE := \$(boot)\/Image/g' arch/arm64/Makefile
+          sed -i 's/all:.*Image\.gz.*/all: Image/g' arch/arm64/Makefile
+
           echo "[+] Disabling LTO to prevent OOM"
           sed -i 's/CONFIG_LTO_CLANG=y/# CONFIG_LTO_CLANG is not set/g' arch/arm64/configs/$DEFCONFIG_NAME
           echo "CONFIG_LTO_NONE=y" >> arch/arm64/configs/$DEFCONFIG_NAME
